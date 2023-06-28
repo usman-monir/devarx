@@ -9,3 +9,13 @@ email_validator
 openai
 ajax
 simple-websocket
+google-auth==2.3.2
+google-auth-oauthlib
+MarkupSafe
+oauthlib
+requests
+requests-oauthlib
+cachetools
+certifi
+chardet
+urllib3

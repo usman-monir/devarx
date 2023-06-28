@@ -29,5 +29,8 @@
         {{ form.submit(class="btn btn-primary mr-5") }}
         <a class="link ml-5" href="{{ url_for('reset_request')}}">Forgot Password?</a>
     </div>
+    <div class="container">
+        <a href="{{url_for('google_login')}}" class="btn btn-primary">Continue with google</a>
+    </div>
     </form>
 {% endblock %}

@@ -59,7 +59,7 @@ class User:
     def login(self, email, password):
         try:
             mydbCursor = db.cursor()
-            sql = "SELECT email FROM Signup WHERE email = %s AND password = %s"
+            sql = "SELECT username FROM Signup WHERE email = %s AND password = %s"
             args = (email, password)
             mydbCursor.execute(sql, args)
             db.commit()

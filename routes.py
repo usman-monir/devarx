@@ -5,9 +5,28 @@ from forms import SignupForm, LoginForm, RestRequestForm, ResetPasswordForm, Hom
 from flask_socketio import join_room, leave_room
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer as Serializer
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
+import google.auth.transport.requests
 from string import ascii_uppercase
 from datetime import datetime
 import random
+import os
+import pathlib
+import requests
+
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+GOOGLE_CLIENT_ID = "219235789575-fv9nq1qi4a0tjcg7ge4f6olc0s3ein3l.apps.googleusercontent.com"
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "google_auth.json")
+
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="http://127.0.0.1:5000/callback"
+)
+
 
 rooms = {}
 
@@ -47,7 +66,8 @@ def generateChatResponse(prompt):
 
 @app.route("/", methods=["GET", "POST"])
 def homepage():
-    session.clear()
+    if session.get("email") is None or session.get("name") is None:
+        return redirect(url_for("login"))
     form = HomePageForm()
     if request.method == "POST":
         name = form.name.data
@@ -69,9 +89,44 @@ def homepage():
             return render_template("homepage.html", form=form, title="Home", name=name, code=code )
 
         session["room"] = room_to_join
-        session["name"] = name
         return redirect(url_for("room"))
-    return render_template("homepage.html", form= form, title= "Home")
+    return render_template("homepage.html", form= form, title= "Home", name=session.get("name"))
+
+
+
+@app.route("/google_login")
+def google_login():
+    session.clear()
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
+
+
+@app.route("/callback")
+def callback():
+    try:
+        if session.get("state") != request.args.get("state"):
+            return redirect(url_for("login"))
+
+        flow.fetch_token(authorization_response=request.url)
+
+        credentials = flow.credentials
+        request_session = requests.session()
+        cached_session = cachecontrol.CacheControl(request_session)
+        token_request = google.auth.transport.requests.Request(session=cached_session)
+
+        id_info = id_token.verify_oauth2_token(
+            id_token=credentials._id_token,
+            request=token_request,
+            audience=GOOGLE_CLIENT_ID
+        )
+        session["email"] = id_info.get("email")
+        session["name"] = id_info.get("name")
+        homePageForm = HomePageForm()
+        return render_template("homepage.html", form=homePageForm, title="Home", name=session.get("name"))
+    except Exception as e:
+        flash("SECURITY CHECK: " + str(e), "danger")
+    return redirect(url_for("login"))
 
 @app.route("/get", methods=["GET", "POST"])
 def chatWithBot():
@@ -105,16 +160,18 @@ def signup():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if form.validate_on_submit():
-        u = User()
-        user = u.login(form.email.data, form.password.data)
-        if user:
-            session['email'] = form.email.data
-            flash("Logged in successfully!", "success")
-            return redirect(url_for("homepage"))
-        else:
-            flash("Incorrect email or password!", "danger")
-            return redirect(url_for("login"))
+    if request.method == "POST":
+        if form.validate_on_submit():
+            u = User()
+            username = u.login(form.email.data, form.password.data)[0]
+            if username:
+                session['email'] = form.email.data
+                session['name'] = username
+                flash("Logged in successfully!", "success")
+                return redirect(url_for("homepage"))
+            else:
+                flash("Incorrect email or password!", "danger")
+                return redirect(url_for("login"))
     return render_template('login.html', title="Login", form=form)
 
 
