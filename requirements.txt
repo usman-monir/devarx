@@ -1,0 +1,11 @@
+flask
+flask_mail
+itsdangerous
+flask_wtf
+wtforms
+flask_socketio
+pymysql
+email_validator
+openai
+ajax
+simple-websocket

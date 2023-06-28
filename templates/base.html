@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+      crossorigin="anonymous"
+    ></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="{{ url_for('static',  filename='css/chatbot.css')}}"
+      rel="stylesheet"
+    />
+    <title>{{title}}</title>
+  </head>
+  <body>
+    {% for message in get_flashed_messages(with_categories=True) %}
+    <p class="alert alert-{{message[0]}} m-0">{{ message[1] }}</p>
+    {% endfor %}
+    <div class="fabs">
+      <div class="chat">
+        <div class="chat_header">
+          <div class="chat_option">
+            <div class="header_img">
+              <img
+                src="https://media.istockphoto.com/id/1350820098/photo/cute-blue-robot-giving-thumbs-up-3d.jpg?s=170667a&w=0&k=20&c=OK-BXEECBj7wVnYVH_9VSio6l2Kd0kzG_4J7BiGnLck="
+              />
+            </div>
+            <span id="chat_head">DEV-ARX</span> <br />
+            <span class="agent">Bot</span> <span class="online">Online</span>
+          </div>
+        </div>
+        <div class="chat_body chat_login">
+          <p>
+            It's a chatbot integrated by DevArx Team available at any time. Feel
+            free to Ask it anything :)
+          </p>
+        </div>
+        <div id="chats"></div>
+        <form id="messageArea" class="chat-bot-form">
+          <input
+            id="text"
+            name="chat-input"
+            placeholder="Send a message"
+            class="chat_field chat_message"
+          />
+          <button
+            type="submit"
+            id="fab_send"
+            hidden
+          >
+        </button>
+        </form>
+      </div>
+      <a id="prime" class="fab"
+        ><i class="prime zmdi zmdi-comment-outline"></i
+      ></a>
+    </div>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js')}}"></script>
+    <div class="container p-5">{% block content%} {% endblock %}</div>
+  </body>
+
+  <script>
+    $(document).ready(function () {
+      $("#messageArea").on("submit", function (event) {
+        const date = new Date();
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+        const str_time = hour + ":" + minute;
+        var rawText = $("#text").val();
+
+        var userHtml = `<div id="chat_form_user" class="chat_form"><span class="chat_msg_item chat_msg_item_user"> ${rawText}</span>
+            <span class="status"> ${str_time}</span></div>`;
+
+        $("#text").val("");
+        $("#chats").append(userHtml);
+
+        $.ajax({
+          data: {
+            mssg: rawText,
+          },
+          type: "POST",
+          url: "/get",
+        }).done(function (data) {
+          var botHtml = `<div id="chat_form_admin" class="chat_form"><div class="chat_msg_item">${data}</div>
+                    <span class="status">${str_time}</span></div>`;
+          $("#chats").append(botHtml);
+        });
+        event.preventDefault();
+      });
+    });
+  </script>
+</html>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="room-form" method="POST" action="/">
+    <h4 class="mb-4 text-muted">ENTER THE CHAT ROOM </h4>
+    <div class="form-group">
+        <p class="text-muted">Name</p>
+        {{ form.name(class="form-control", value= name, placeholder="choose a name..")}}
+    </div>
+    <div class="form-group">
+        <p class="text-muted">Room Code</p>
+        {{ form.code(class="form-control", value= code, placeholder="Enter Code..")}}
+        </div>
+    <button type="submit" name="join" class="btn btn-primary">Join Room</button>
+    <button type="submit" name="create" class="btn btn-success">Create a Room</button>
+  </form>
+  {{ response }}
+{% endblock %}
