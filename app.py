@@ -13,10 +13,10 @@ socketIO = SocketIO(app)
 openai.api_key = config.props["API_KEY"]
 
 db = pymysql.connect(
-    host='localhost',
-    user='root',
-    password='root',
-    database='devarx'
+    host= config.props["HOST"],
+    user=config.props["DB_USER"],
+    password=config.props["DB_PASSWORD"],
+    database=config.props["DATABASE"]
 )
 
 from routes import *

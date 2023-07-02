@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% for connectionId in connectionsIds %}
+    <div class="alert alert-success">{{connectionId}}</div>
+{% endfor %}
+{% endblock %}

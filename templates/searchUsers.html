@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+    {% for user in users %}
+        {% set ns = namespace(isFriend = False) %}
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-8 border border-dark">
+                        <div class="row justify-content-center align-content-center">
+                            <div class="imageCon col-5">
+                            </div>
+                            <div class="name col-7">
+                                <div class="row">
+                                    <div class="col-9">
+                                        <h3>{{ user[1] }} {{ user[2] }}</h3>
+                                    </div>
+
+                                    <div class="requestIcon col-3">
+                                        {% for id in connections %}
+                                                    {% if id == user[0] %}
+                                                        {% set ns.isFriend = True %}
+                                                        {{ break }}
+                                                    {% endif %}
+                                        {% endfor %}
+
+                                        {% if ns.isFriend == False %}
+                                            <a class="col-12 btn-primary" href="{{url_for('sendFriendRequest', id=user[0])}}">
+                                            <input name="id" value="{{ user[0] }}" style="display:none"/>
+                                                <i class="fa fa-user-plus"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if ns.isFriend == True %}
+                                            <a class="col-12 btn-danger" href="{{url_for('removeFriend', id=user[0], search=search)}}">
+                                            <input name="id" value="{{ user[0] }}" style="display:none"/>
+                                                <i class="fa fa-minus"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    {%  endfor %}
+{% endblock %}

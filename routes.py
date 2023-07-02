@@ -1,7 +1,7 @@
 from app import socketIO, openai, app, mail
-from models import User
+from models import Users
 from flask import render_template, url_for, redirect, flash, session, request
-from forms import SignupForm, LoginForm, RestRequestForm, ResetPasswordForm, HomePageForm
+from forms import SignupForm, LoginForm, ResetRequestForm, ResetPasswordForm, HomePageForm
 from flask_socketio import join_room, leave_room
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -15,10 +15,11 @@ import random
 import os
 import pathlib
 import requests
+import config
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-GOOGLE_CLIENT_ID = "219235789575-fv9nq1qi4a0tjcg7ge4f6olc0s3ein3l.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = config.props["GOOGLE_CLIENT_ID"]
 client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "google_auth.json")
 
 flow = Flow.from_client_secrets_file(
@@ -30,7 +31,7 @@ flow = Flow.from_client_secrets_file(
 
 rooms = {}
 
-app.config["SECRET_KEY"] = "asupersecretkey"
+app.config["SECRET_KEY"] = config.props["SECRET_KEY"]
 
 # utility method to generate code for a room
 def generate_code(length):
@@ -52,14 +53,14 @@ def generateChatResponse(prompt):
     question['role'] = 'system'
     question['content'] = prompt
     messages.append(question)
-
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=messages)
+    answer = ""
     try:
+        response = openai.ChatCompletion.create(model="gpt-3.5-turbo",messages=messages)
         answer = response['choices'][0]['message']['content'].replace('\n', '<br>')
-    except:
-        flash("Something went wrong!", "danger")
-        return "Check your internet connection and try again :("
-    return answer
+        print("answer" , answer)
+        return answer
+    except Exception as e:
+        return str(e)
 
 
 # routes
@@ -93,10 +94,9 @@ def homepage():
     return render_template("homepage.html", form= form, title= "Home", name=session.get("name"))
 
 
-
 @app.route("/google_login")
 def google_login():
-    session.clear()
+    # session.clear() will add this later
     authorization_url, state = flow.authorization_url()
     session["state"] = state
     return redirect(authorization_url)
@@ -118,8 +118,10 @@ def callback():
         id_info = id_token.verify_oauth2_token(
             id_token=credentials._id_token,
             request=token_request,
-            audience=GOOGLE_CLIENT_ID
+            audience=GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=-1,
         )
+        print(id_info)
         session["email"] = id_info.get("email")
         session["name"] = id_info.get("name")
         homePageForm = HomePageForm()
@@ -131,7 +133,8 @@ def callback():
 @app.route("/get", methods=["GET", "POST"])
 def chatWithBot():
     mssg = request.form.get("mssg")
-    return generateChatResponse(mssg)
+    res = generateChatResponse(mssg)
+    return res
 
 
 @app.route("/room")
@@ -146,10 +149,10 @@ def room():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
-    u = User()
-    u.CreateSignupTable()
+    usersHandler = Users()
+    usersHandler.CreateUsersTable()
     if form.validate_on_submit():
-        res = u.insertToSignup(form.username.data, form.email.data, form.password.data)
+        res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
         if res:
             flash(res, "danger")
         else:
@@ -162,11 +165,12 @@ def login():
     form = LoginForm()
     if request.method == "POST":
         if form.validate_on_submit():
-            u = User()
-            username = u.login(form.email.data, form.password.data)[0]
-            if username:
-                session['email'] = form.email.data
-                session['name'] = username
+            usersHandler = Users()
+            userData = usersHandler.login(form.email.data, form.password.data)
+            if userData:
+                session['id'] = userData[0]
+                session['name'] = userData[1]
+                session['email'] = userData[2]
                 flash("Logged in successfully!", "success")
                 return redirect(url_for("homepage"))
             else:
@@ -177,11 +181,11 @@ def login():
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
-    form = RestRequestForm()
+    form = ResetRequestForm()
     if form.validate_on_submit():
         email = form.email.data
-        u = User()
-        exists = u.verify(email)
+        usersHandler = Users()
+        exists = usersHandler.verify(email)
         if exists:
             try:
                 serializer = Serializer('app')
@@ -214,8 +218,8 @@ def reset_with_token(token):
     form = ResetPasswordForm()
     if form.validate_on_submit():
         password = form.password.data
-        user = User()
-        update = user.updatePassword(password, email)
+        usersHandler = Users()
+        update = usersHandler.updatePassword(password, email)
         if update:
             flash("Password've been changed! Please login.", 'success')
             return redirect(url_for('login'))
@@ -224,6 +228,126 @@ def reset_with_token(token):
     return render_template('change_password.html', title='Change Password', form=form)
 
 
+@app.route("/searchResult", methods=["GET","POST"])
+def getSearchResults():
+    if "id" in session:
+        username = str(request.args["search"])
+        usersData = []
+        connectionsIds = []
+        id = session.get("id")
+        usersHandler = Users()
+        users = usersHandler.getUserNames()
+
+        # getting all the users except self
+        for user in users:
+            if user[0] != id and (username.lower() in user[1].lower() or username.lower() in user[2].lower()):
+                usersData.append(user)
+
+        # getting all the friends
+        connections = usersHandler.getConnections(id)
+        for connection in connections:
+            # check which one is not user himself and then append to the array
+            if int(id) == connection[1]:
+                connectionsIds.append(connection[2])
+            else:
+                connectionsIds.append(connection[1])
+        print(connectionsIds)
+        return render_template("searchUsers.html", users=usersData, connections=connectionsIds, search=username, title="Add Connections")
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect(url_for("homepage"))
+
+
+@app.route("/connections", methods=["GET", "POST"])
+def showAllConnections():
+    if "id" in session:
+        usersHandler = Users()
+        id = session.get("id")
+        connectionsIds = []
+         # getting all the friends
+        connections = usersHandler.getConnections(id)
+        for connection in connections:
+            # check which one is not user himself and then append to the array
+            if int(id) == connection[1]:
+                connectionsIds.append(connection[2])
+            else:
+                connectionsIds.append(connection[1])
+
+        return render_template("connections.html", connectionsIds = connectionsIds, title="Connections")
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect('/')
+
+
+@app.route("/friendRequest", methods=["GET","POST"])
+def sendFriendRequest():
+    if "id" in session:
+        form = HomePageForm()
+        friend_id = int(request.args["id"])
+        usersHandler = Users()
+        res = usersHandler.addToPending(session.get("id"), friend_id)
+        flash(res[0], res[1])
+        return render_template("homepage.html", form=form, title="Home")
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect('/')
+
+
+@app.route("/removeFriend",  methods=["GET","POST"])
+def removeFriend():
+    if "id" in session:
+        friend_id = int(request.args["id"])
+        search = request.args["search"]
+        usersHandler = Users()
+        res = usersHandler.removeConnection(session.get("id"), friend_id)
+        flash(res[0], res[1])
+        return redirect(url_for('getSearchResults', search=search))
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect('/')
+
+@app.route("/notifications")
+def notifications():
+    if "id" in session:
+        usersHandler = Users()
+        pendingRequests = usersHandler.getPendingRequests(session.get("id"))
+        usersData = []
+        for request in pendingRequests:
+            usersData.append(usersHandler.getUserData(request[0]))
+
+        print(usersData)
+
+        return render_template('notifications.html', users=usersData, title="Notifications")
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect('/')
+
+
+@app.route("/acceptOrRejectRequest", methods=["GET","POST"])
+def handleAcceptOrRejectRequest():
+    if "id" in session:
+
+        friend_id = request.form.get("id")
+        accept = False
+        try:
+            if request.form.get("accept") == "Accept":
+                accept = True
+        except:
+            if request.form.get("reject") == "Reject":
+                accept = False
+
+        usersHandler = Users()
+        usersHandler.clearFromPending(friend_id, session.get("id"))
+
+        if accept:
+            res = usersHandler.addConnection(session.get("id"), friend_id)
+            flash(res[0], res[1])
+
+        return redirect('/')
+
+    else:
+        flash("Something went wrong!", "warning")
+        return redirect('/')
 
 # socket methods
 

@@ -23,7 +23,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField(label='Login',validators=[DataRequired()])
 
 
-class RestRequestForm(FlaskForm):
+class ResetRequestForm(FlaskForm):
     email = EmailField(label="Email", validators=[DataRequired(), Email()])
     submit = SubmitField(label='Reset Password' , validators=[DataRequired()])
 

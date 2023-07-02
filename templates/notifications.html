@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% for user in users %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-8 border border-dark">
+                <div class="row justify-content-center align-content-center">
+                    <div class="imageCon col-5">
+                        <div class="backgroundImage"
+                        style="background-image: url('https://ptetutorials.com/images/user-profile.png');">
+
+                        </div>
+                    </div>
+                    <div class="name col-7">
+                        <div class="row">
+                            <div class="col-9">
+                                <h3>{{ user[1] }} {{ user[2] }}</h3>
+                            </div>
+                        </div>
+                        <div class="row justify-content-evenly">
+                        <form action="/acceptOrRejectRequest" method="post">
+                            <input name="id" value= "{{ user[0] }}" id="member_id"  style="display:none"/>
+                            <input type="submit"
+                            class="btn btn-success col-4"
+                            value="Accept" name="accept"/>
+                            <input type="submit"
+                            class="btn btn-danger col-4"
+                            value="Reject" name="reject"/>
+                        </form>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock %}
