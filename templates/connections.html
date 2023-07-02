@@ -1,7 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
+    <form action="/chat" method="post">
+        <div class="container">
+            <div class="row justify-content-center">
+                {% if connections != None and connections != [] %}
+                {% for connection in connections %}
 
-{% for connectionId in connectionsIds %}
-    <div class="alert alert-success">{{connectionId}}</div>
-{% endfor %}
+                <button type="submit" class="col-7 border border-dark" name="id" value="{{ connection[0] }}">
+                    <div class="row justify-content-center align-content-center">
+                        <div class="imageCon col-5 m-2">
+                        </div>
+                    </div>
+                    <div class="name col-6">
+                        <div class="row justify-content-center">
+                            <div class="col-9">
+                                <h3>{{ connection[0] }} {{ connection[2] }}</h3>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                                {{ connection[1] }}
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                    <div style="height: 8px"></div>
+                    {%  endfor %}
+                    {% endif %}
+                </div>
+            </div>
+    </form>
 {% endblock %}
+

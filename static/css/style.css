@@ -78,7 +78,7 @@ body{
 	width: 60%;
 }
 
-.mesgs{
+.mssgs{
 	float: left;
 	padding: 30px 15px 0 25px;
 	width:70%;
@@ -96,7 +96,7 @@ body{
 
 .outgoing_msg {
 	overflow: hidden;
-	margin: 26px 0 26px;
+	margin: 10px 0 20px;
 }
 
 .sent_msg {

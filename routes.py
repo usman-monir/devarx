@@ -263,17 +263,17 @@ def showAllConnections():
     if "id" in session:
         usersHandler = Users()
         id = session.get("id")
-        connectionsIds = []
+        connections = []
          # getting all the friends
-        connections = usersHandler.getConnections(id)
-        for connection in connections:
+        connectionsIds = usersHandler.getConnections(id)
+        for connection in connectionsIds:
             # check which one is not user himself and then append to the array
             if int(id) == connection[1]:
-                connectionsIds.append(connection[2])
+                connections.append(usersHandler.getUserData(connection[2]))
             else:
-                connectionsIds.append(connection[1])
+                connections.append(usersHandler.getUserData(connection[1]))
 
-        return render_template("connections.html", connectionsIds = connectionsIds, title="Connections")
+        return render_template("connections.html", connections = connections, title="Connections")
     else:
         flash("Something went wrong!", "warning")
         return redirect('/')
@@ -349,6 +349,27 @@ def handleAcceptOrRejectRequest():
         flash("Something went wrong!", "warning")
         return redirect('/')
 
+
+@app.route('/chat', methods=["POST","GET"])
+def startChat():
+    if "id" in session:
+        friend_id = int(request.form["id"])
+        id = int(session.get("id"))
+
+        usersHandler = Users()
+        myData = usersHandler.getUserData(id)
+        friendData = usersHandler.getUserData(friend_id)
+        room_id = usersHandler.getRoomId(id,friend_id)[0]
+        prevChat = usersHandler.getPrevChat(room_id)
+        chat = []
+        if prevChat is not None:
+            for message in prevChat:
+                chat.append(message)
+        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, title="Room - " + str(room_id) )
+    else:
+        return redirect('/')
+
+
 # socket methods
 
 @socketIO.on("connect")
@@ -388,8 +409,23 @@ def disconnect():
     redirect(url_for("homepage"))
 
 
+@socketIO.on("join_private_room")
+def join_private_room(name, room_id):
+    join_room(room_id)
+    socketIO.emit( "joinOrLeave", {"name": name, "message": " has joined the room "}, to=room_id)
+
+
+@socketIO.on("send_private_message")
+def send_private_message(room_id, friend_id, message):
+    usersHandler = Users()
+    now = datetime.now()
+    formatted_date = now.strftime("%I:%M %p | %B %d")
+    usersHandler.saveMessage(room_id,int(session.get("id")),int(friend_id), message, formatted_date)
+    socketIO.emit('receive_mssg', {"id":session.get("id"), "message": message, "date":formatted_date}, to=room_id)
+
+
 @socketIO.on("send_message")
-def message(message):
+def send_message(message):
     name = session.get("name")
     room_code = session.get("room")
     if room_code not in rooms:

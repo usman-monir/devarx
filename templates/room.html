@@ -2,9 +2,9 @@
 {% block content %}
 
 <div class="messaging">
-      <div class="mesgs">
+      <div class="mssgs">
         <div class="msg_history" id="msg_history">
-      </div>
+        </div>
        <div class="type_msg">
           <div class="input_msg_write">
             <input type="text" class="write_msg" placeholder="Type a message" id="message" name="message" />
@@ -19,8 +19,9 @@
     var socketIO = io.connect();
 
     const messageContainer = document.getElementById("msg_history")
+    // messageContainer.scrollTop = messageContainer.scrollHeight;
 
-    const showJoinOrLeft= (name, message) => {
+    const showJoinOrLeave= (name, message) => {
        const content = `
         <div class="text-center m-4">
             <small class="text-muted">${name} ${message}</small>
@@ -28,7 +29,7 @@
        `
        messageContainer.innerHTML += content;
     }
-    socketIO.on("joinOrLeave", data => showJoinOrLeft(data.name, data.message))
+    socketIO.on("joinOrLeave", data => showJoinOrLeave(data.name, data.message))
 
     const showMessage = ({name, message, date}) => {
         let content = '';

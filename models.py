@@ -93,7 +93,6 @@ class Users:
                 mydbCursor.close()
 
 
-
     def getUserData(self, id):
         try:
             mydbCursor = db.cursor()
@@ -272,3 +271,58 @@ class Users:
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
+
+
+    def getRoomId(self, id, friend_id):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select room_id from connections where (friend1=%s and friend2=%s) or (friend1=%s and friend2=%s)"
+            args = (id, friend_id, friend_id, id)
+            mydbCursor.execute(sql, args)
+            result = mydbCursor.fetchone()
+            return result
+
+        except Exception as e:
+            print(str(e))
+
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def getPrevChat(self, room_id):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select * from chat_history where room_id = %s"
+            args=(room_id)
+            mydbCursor.execute(sql, args)
+            result = mydbCursor.fetchall()
+            return result
+
+        except Exception as e:
+            print(str(e))
+
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def saveMessage(self, room_id, sender_id, reciever_id, message_text, time_send):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "insert into chat_history(room_id, sender_id, reciever_id,message_text,time_send) values(%s,%s,%s,%s,%s)"
+            args = (room_id, sender_id, reciever_id, message_text, time_send)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            res = mydbCursor.fetchall()
+            print(res)
+        except Exception as e:
+            print(str(e))
+
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
