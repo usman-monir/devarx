@@ -96,7 +96,7 @@ def homepage():
 
 @app.route("/google_login")
 def google_login():
-    # session.clear() will add this later
+    session.clear()
     authorization_url, state = flow.authorization_url()
     session["state"] = state
     return redirect(authorization_url)
@@ -124,11 +124,17 @@ def callback():
         print(id_info)
         session["email"] = id_info.get("email")
         session["name"] = id_info.get("name")
+        usersHandler = Users()
+        res = usersHandler.insertToUsers(id_info.get("name") , id_info.get("email"), "1234")
+        flash(res[0], res[1])
+        id = usersHandler.getUserId(id_info.get("email"), "1234")
+        session["id"] = id
         homePageForm = HomePageForm()
         return render_template("homepage.html", form=homePageForm, title="Home", name=session.get("name"))
     except Exception as e:
         flash("SECURITY CHECK: " + str(e), "danger")
     return redirect(url_for("login"))
+
 
 @app.route("/get", methods=["GET", "POST"])
 def chatWithBot():
@@ -143,14 +149,14 @@ def room():
     name = session.get("name")
     if room_code is None or name is None or room_code not in rooms:
         return redirect(url_for("homepage"))
-    return render_template("room.html", title="Room: " + room_code, current_user=session.get("name"))
+    return render_template("room.html", title="Room: " + room_code, connections=getAllConnections(), current_user=session.get("name"))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    session.clear()
     form = SignupForm()
     usersHandler = Users()
-    usersHandler.CreateUsersTable()
     if form.validate_on_submit():
         res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
         if res:
@@ -233,7 +239,6 @@ def getSearchResults():
     if "id" in session:
         username = str(request.args["search"])
         usersData = []
-        connectionsIds = []
         id = session.get("id")
         usersHandler = Users()
         users = usersHandler.getUserNames()
@@ -243,40 +248,40 @@ def getSearchResults():
             if user[0] != id and (username.lower() in user[1].lower() or username.lower() in user[2].lower()):
                 usersData.append(user)
 
-        # getting all the friends
-        connections = usersHandler.getConnections(id)
-        for connection in connections:
-            # check which one is not user himself and then append to the array
-            if int(id) == connection[1]:
-                connectionsIds.append(connection[2])
-            else:
-                connectionsIds.append(connection[1])
-        print(connectionsIds)
-        return render_template("searchUsers.html", users=usersData, connections=connectionsIds, search=username, title="Add Connections")
+        return render_template("searchUsers.html", users=usersData, connections=getAllConnectionIds(), search=username, title="Add Connections")
     else:
         flash("Something went wrong!", "warning")
         return redirect(url_for("homepage"))
 
 
-@app.route("/connections", methods=["GET", "POST"])
-def showAllConnections():
-    if "id" in session:
-        usersHandler = Users()
-        id = session.get("id")
-        connections = []
-         # getting all the friends
-        connectionsIds = usersHandler.getConnections(id)
-        for connection in connectionsIds:
-            # check which one is not user himself and then append to the array
-            if int(id) == connection[1]:
-                connections.append(usersHandler.getUserData(connection[2]))
-            else:
-                connections.append(usersHandler.getUserData(connection[1]))
+def getAllConnectionIds():
+    usersHandler = Users()
+    id = session.get("id")
+    connectionIds = []
+    # getting all the friends
+    connections = usersHandler.getConnections(id)
+    for connection in connections:
+        # check which one is not user himself and then append to the array
+        if int(id) == connection[1]:
+            connectionIds.append(connection[2])
+        else:
+            connectionIds.append(connection[1])
+    return connectionIds
 
-        return render_template("connections.html", connections = connections, title="Connections")
-    else:
-        flash("Something went wrong!", "warning")
-        return redirect('/')
+
+def getAllConnections():
+    usersHandler = Users()
+    id = session.get("id")
+    connections = []
+        # getting all the friends
+    connectionsIds = usersHandler.getConnections(id)
+    for connection in connectionsIds:
+        # check which one is not user himself and then append to the array
+        if int(id) == connection[1]:
+            connections.append(usersHandler.getUserData(connection[2]))
+        else:
+            connections.append(usersHandler.getUserData(connection[1]))
+    return connections
 
 
 @app.route("/friendRequest", methods=["GET","POST"])
@@ -353,9 +358,9 @@ def handleAcceptOrRejectRequest():
 @app.route('/chat', methods=["POST","GET"])
 def startChat():
     if "id" in session:
-        friend_id = int(request.form["id"])
+        friend_id = int(request.form.get("id"))
         id = int(session.get("id"))
-
+        print(friend_id)
         usersHandler = Users()
         myData = usersHandler.getUserData(id)
         friendData = usersHandler.getUserData(friend_id)
@@ -365,7 +370,7 @@ def startChat():
         if prevChat is not None:
             for message in prevChat:
                 chat.append(message)
-        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, title="Room - " + str(room_id) )
+        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, connections=getAllConnections(), title="Room - " + str(room_id) )
     else:
         return redirect('/')
 

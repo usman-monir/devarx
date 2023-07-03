@@ -1,7 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-
+<link rel="stylesheet" href="{{url_for('static', filename='css/recentChats.css')}}">
 <div class="messaging">
+    <aside class="recents">
+        <form action="/chat" method="POST">
+            <ul>
+                {% if connections != None and connections != [] %}
+                {% for connection in connections %}
+                <button type="submit" class="recentsBtn" name="id" value="{{connection[0]}}" >
+                    <li>
+                        <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_05.jpg" alt="">
+                        <div>
+                            <h2>{{ connection[1]}}</h2>
+                        </div>
+                    </li>
+                </button>
+                <hr>
+                {% endfor %}
+                {% endif %}
+            </ul>
+        </form>
+    </aside>
       <div class="mssgs">
         <div class="msg_history" id="msg_history">
             {% if prevChat != None and prevChat != []%}
@@ -13,7 +32,6 @@
                                     <span class="time_date"> {{chat[4]}}</span>
                                 </div>
                             </div>
-
                         {% else %}
                             <div class="incoming_msg">
                                 <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="User"> </div>

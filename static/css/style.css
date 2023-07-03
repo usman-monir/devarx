@@ -75,13 +75,12 @@ body{
 }
 
 .received_withd_msg {
-	width: 60%;
+	width: 50%;
 }
 
 .mssgs{
 	float: left;
-	padding: 30px 15px 0 25px;
-	width:70%;
+	width:60%;
 }
 
 .sent_msg p {
@@ -105,9 +104,9 @@ body{
 }
 
 .input_msg_write input {
-	background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+	background-color: inherit;
 	border: medium none;
-	color: #4c4c4c;
+	color: #484747;
 	font-size: 15px;
 	min-height: 48px;
 	width: 97%;
@@ -115,9 +114,11 @@ body{
 }
 
 .type_msg {
-	border-top: 1px solid #c4c4c4;
+	background-color: #edecec;
+	border-top: 1px solid #eae8e8;
 	position: relative;
     margin-top: 15px;
+	margin-left: 10px;
 }
 
 .msg_send_btn {
@@ -128,23 +129,22 @@ body{
 	cursor: pointer;
 	font-size: 15px;
 	position: absolute;
-	right: 0;
-	top: 11px;
+	right: 10px;
+	top: 10px;
 	width: 33px;
 	height: 33px;
 }
 
 .messaging {
-	padding: 0 0 50px 0;
+	display: flex;
 }
 
 .msg_history {
-	height: 516px;
-	overflow-y: auto;
-	overflow-x: hidden;
-	display: flex;
-	flex-direction: column;
-	border: 1px solid rgba(143, 143, 143, 0.183);
-	margin: 0 auto;
-	padding: 5px;
+	height: 480px;
+	border: 1px solid rgba(159, 159, 159, 0.183);
+	margin-left: 10px;
+	padding: 10px 20px;
+	display: inherit;
+	overflow-y: scroll;
+	overflow-x: auto;
 }

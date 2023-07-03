@@ -45,6 +45,7 @@ class Users:
             args = (u, e, p)
             mydbCursor.execute(sql, args)
             db.commit()
+            return ("Added to Users", "success")
         except Exception as e:
             mssg = str(e)
             start_index = mssg.find('"') + 1
@@ -53,7 +54,7 @@ class Users:
             if start_index != -1 and end_index != -1:
                 return mssg[start_index:end_index]
             else:
-                return str(e)
+                return (str(e), "danger")
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
@@ -76,6 +77,23 @@ class Users:
 
         return rows
 
+
+    def getUserId(self, email, password):
+        try:
+            mydbCursor = db.cursor()
+            sql = "SELECT id FROM Users WHERE email = %s AND password = %s"
+            args = (email, password)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            rows = mydbCursor.fetchone()[0]
+            print(rows)
+        except Exception as e:
+           print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+        return rows
 
     def getUserNames(self):
         try:

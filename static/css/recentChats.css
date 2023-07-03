@@ -1,0 +1,53 @@
+*{
+	box-sizing:border-box;
+}
+
+.recents{
+	width:260px;
+	height:544px;
+	background-color:#2b374a;
+	display:inline-block;
+	font-size:15px;
+	vertical-align:top;
+    overflow-y: scroll;
+    overflow-x: hidden;
+	padding-top: 30px;
+}
+
+.recents ul{
+	padding-left:0;
+	margin:0;
+	list-style-type:none;
+	overflow-y:scroll;
+	height:auto;
+    overflow-x: hidden;
+}
+.recents li{
+	padding:0 3px;
+}
+
+h2,h3{
+    margin:0;
+}
+.recents li img{
+    border-radius:50%;
+	margin-left:20px;
+	margin-right:8px;
+}
+.recents li div{
+    display:inline-block;
+	vertical-align:top;
+	margin-top:12px;
+}
+.recents li h2{
+    font-size:14px;
+	color:#fff;
+	font-weight:normal;
+	margin-bottom:5px;
+}
+.recentsBtn
+{
+    border: none;
+    outline: none;
+    background-color: inherit;
+}
