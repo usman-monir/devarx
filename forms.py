@@ -4,9 +4,9 @@ from wtforms.validators import DataRequired, Length, EqualTo, Email
 
 
 
-class HomePageForm(FlaskForm):
+class GroupForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
-    code = StringField('code')
+    description = StringField('description')
 
 
 class SignupForm(FlaskForm):

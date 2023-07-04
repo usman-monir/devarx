@@ -1,7 +1,7 @@
 from app import socketIO, openai, app, mail
 from models import Users
 from flask import render_template, url_for, redirect, flash, session, request
-from forms import SignupForm, LoginForm, ResetRequestForm, ResetPasswordForm, HomePageForm
+from forms import SignupForm, LoginForm, ResetRequestForm, ResetPasswordForm, GroupForm
 from flask_socketio import join_room, leave_room
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -28,25 +28,10 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="http://127.0.0.1:5000/callback"
 )
 
-
-rooms = {}
-
 app.config["SECRET_KEY"] = config.props["SECRET_KEY"]
 
-# utility method to generate code for a room
-def generate_code(length):
-    while True:
-        code = ""
-        for _ in range(length):
-            code += random.choice(ascii_uppercase)
-
-        if code not in rooms:
-            break
-
-    return code
 
 # utility method to generate chatgpt response
-
 def generateChatResponse(prompt):
     messages = []
     question = {}
@@ -65,33 +50,11 @@ def generateChatResponse(prompt):
 
 # routes
 
-@app.route("/", methods=["GET", "POST"])
-def homepage():
-    if session.get("email") is None or session.get("name") is None:
-        return redirect(url_for("login"))
-    form = HomePageForm()
-    if request.method == "POST":
-        name = form.name.data
-        code = form.code.data
-        join = request.form.get("join", False)
-        create = request.form.get("create", False)
-        room_to_join = code
-        print(name,code,create)
-        if create != False:
-            code = generate_code(4)
-            rooms[code] = {"members": 0, "messages":[]}
-            print(rooms)
-            return render_template("homepage.html", form=form, title="Home", name=name, code=code)
-        elif code not in rooms:
-            if len(code) != 4:
-                flash("Enter a valid 4-digit code for room", "warning")
-            else:
-                flash("Room doesn't exists!", "danger")
-            return render_template("homepage.html", form=form, title="Home", name=name, code=code )
-
-        session["room"] = room_to_join
-        return redirect(url_for("room"))
-    return render_template("homepage.html", form= form, title= "Home", name=session.get("name"))
+@app.route("/get", methods=["GET", "POST"])
+def chatWithBot():
+    mssg = request.form.get("mssg")
+    res = generateChatResponse(mssg)
+    return res
 
 
 @app.route("/google_login")
@@ -129,27 +92,42 @@ def callback():
         flash(res[0], res[1])
         id = usersHandler.getUserId(id_info.get("email"), "1234")
         session["id"] = id
-        homePageForm = HomePageForm()
-        return render_template("homepage.html", form=homePageForm, title="Home", name=session.get("name"))
+        GroupForm = GroupForm()
+        return render_template("homepage.html", form=GroupForm, title="Home", name=session.get("name"))
     except Exception as e:
         flash("SECURITY CHECK: " + str(e), "danger")
     return redirect(url_for("login"))
 
 
-@app.route("/get", methods=["GET", "POST"])
-def chatWithBot():
-    mssg = request.form.get("mssg")
-    res = generateChatResponse(mssg)
-    return res
+@app.route("/", methods=["GET", "POST"])
+def homepage():
+    if session.get("email") is None or session.get("name") is None:
+        return redirect(url_for("login"))
+    form = GroupForm()
+    if request.method == "POST":
+        name = form.name.data
+        description = form.description.data
+
+        usersHandler = Users()
+        res = usersHandler.createGroup(name, description)
+        flash(res[0],[1])
+        return redirect(url_for("room", room_id=1))
+    return render_template("homepage.html", form= form, title= "Home")
 
 
-@app.route("/room")
+@app.route("/room", methods=["GET", "POST"])
 def room():
-    room_code = session.get("room")
-    name = session.get("name")
-    if room_code is None or name is None or room_code not in rooms:
-        return redirect(url_for("homepage"))
-    return render_template("room.html", title="Room: " + room_code, connections=getAllConnections(), current_user=session.get("name"))
+    if "id" in session:
+        room_id = request.form.get("id")
+        print("room_id: ", room_id)
+        if room_id is None:
+            return redirect(url_for("homepage"))
+        usersHandler = Users()
+        res = usersHandler.getGroupData(room_id)
+        print("room_res: ", res)
+        session["room_id"] = room_id
+        return render_template("room.html", title="Room: " + room_id, name=session.get("name"), connections=getAllConnections(),groups=getAllGroups(), group_name=res[1], group_description=res[2])
+    return redirect('/')
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -284,10 +262,20 @@ def getAllConnections():
     return connections
 
 
+def getAllGroups():
+    usersHandler = Users()
+    allGroups = []
+    # getting all the groups
+    groups = usersHandler.getAllGroups()
+    for group in groups:
+       allGroups.append(group)
+    return allGroups
+
+
 @app.route("/friendRequest", methods=["GET","POST"])
 def sendFriendRequest():
     if "id" in session:
-        form = HomePageForm()
+        form = GroupForm()
         friend_id = int(request.args["id"])
         usersHandler = Users()
         res = usersHandler.addToPending(session.get("id"), friend_id)
@@ -335,10 +323,10 @@ def handleAcceptOrRejectRequest():
         friend_id = request.form.get("id")
         accept = False
         try:
-            if request.form.get("accept") == "Accept":
+            if request.form.get("accept"):
                 accept = True
         except:
-            if request.form.get("reject") == "Reject":
+            if request.form.get("reject"):
                 accept = False
 
         usersHandler = Users()
@@ -358,11 +346,12 @@ def handleAcceptOrRejectRequest():
 @app.route('/chat', methods=["POST","GET"])
 def startChat():
     if "id" in session:
-        friend_id = int(request.form.get("id"))
-        id = int(session.get("id"))
-        print(friend_id)
         usersHandler = Users()
+        id = session.get("id")
         myData = usersHandler.getUserData(id)
+        if request.method == "GET":
+            return render_template('chat.html', room_id=0, myData=None, friendData=None, groups=getAllGroups(), connections=getAllConnections(), title="Chat")
+        friend_id = int(request.form.get("id"))
         friendData = usersHandler.getUserData(friend_id)
         room_id = usersHandler.getRoomId(id,friend_id)[0]
         prevChat = usersHandler.getPrevChat(room_id)
@@ -370,7 +359,7 @@ def startChat():
         if prevChat is not None:
             for message in prevChat:
                 chat.append(message)
-        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, connections=getAllConnections(), title="Room - " + str(room_id) )
+        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
     else:
         return redirect('/')
 
@@ -379,45 +368,34 @@ def startChat():
 
 @socketIO.on("connect")
 def connect():
-    room_code = session.get("room")
+    room_id = session.get("room_id")
+    id = session.get("id")
     name = session.get("name")
-    if room_code is None or name is None:
+    if room_id is None or id is None:
         flash("Cannot connect with socketIO", "danger")
         print("Cannot connect with socketIO")
         return
-    if room_code not in rooms:
-        flash("Room not found", "warning")
-        print("Room not found")
-        leave_room(room_code)
-        return
 
     flash("Connected Successfully", "success")
-    join_room(room_code)
-    rooms[room_code]["members"]+=1
-    socketIO.emit( "joinOrLeave", {"name": name, "message": " has joined the room "}, to=room_code)
-    print(f"{name} has joined the room-{room_code}")
+    join_room(room_id)
+    socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+    print(f"{name} has joined the room-{room_id}")
 
 
 @socketIO.on("disconnect")
 def disconnect():
-    room_code = session.get("room")
+    room_id = session.get("room_id")
     name = session.get("name")
-    leave_room(room_code)
-    if room_code in rooms:
-        rooms[room_code]["members"] -= 1
-        if rooms[room_code]["members"] <= 0:
-            del rooms[room_code]
+    leave_room(room_id)
 
-    flash("You are disconnected", "warning")
-    socketIO.emit( "joinOrLeave", {"name": name, "message": " has left the room "}, to=room_code)
-    print(f"{name} has left the room-{room_code}")
+    socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+    print(f"{name} has left the room-{room_id}")
     redirect(url_for("homepage"))
 
 
 @socketIO.on("join_private_room")
-def join_private_room(name, room_id):
+def join_private_room(room_id):
     join_room(room_id)
-    socketIO.emit( "joinOrLeave", {"name": name, "message": " has joined the room "}, to=room_id)
 
 
 @socketIO.on("send_private_message")
@@ -432,11 +410,7 @@ def send_private_message(room_id, friend_id, message):
 @socketIO.on("send_message")
 def send_message(message):
     name = session.get("name")
-    room_code = session.get("room")
-    if room_code not in rooms:
-        flash("Room not found", "warning")
-        print("Room not found")
-        return
+    room_id = session.get("room_id")
 
     now = datetime.now()
     formatted_date = now.strftime("%I:%M %p | %B %d")
@@ -447,5 +421,4 @@ def send_message(message):
         "date": formatted_date
     }
 
-    rooms[room_code]["messages"].append(content)
-    socketIO.emit("show_message", content, to=room_code)
+    socketIO.emit("show_message", content, to=room_id)

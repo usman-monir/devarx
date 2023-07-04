@@ -45,6 +45,20 @@ h2,h3{
 	font-weight:normal;
 	margin-bottom:5px;
 }
+.recents li small{
+	display: block;
+	color:#d6d3d3;
+	margin:5px 0;
+	font-size: 9px;
+}
+.recents .heading
+{
+	color: whitesmoke;
+	font-size: 15px;
+	font-weight: 900;
+	text-align: center;
+	margin-bottom: 30px;
+}
 .recentsBtn
 {
     border: none;

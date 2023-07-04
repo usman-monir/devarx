@@ -3,9 +3,10 @@
 <link rel="stylesheet" href="{{url_for('static', filename='css/recentChats.css')}}">
 <div class="messaging">
     <aside class="recents">
+        {% if connections != None and connections != [] %}
+        <h2 class="heading">All Chats</h2>
         <form action="/chat" method="POST">
             <ul>
-                {% if connections != None and connections != [] %}
                 {% for connection in connections %}
                 <button type="submit" class="recentsBtn" name="id" value="{{connection[0]}}" >
                     <li>
@@ -17,9 +18,29 @@
                 </button>
                 <hr>
                 {% endfor %}
-                {% endif %}
             </ul>
         </form>
+        {% endif %}
+        {% if groups != None and groups != [] %}
+        <h2 class="heading">Groups</h2>
+        <form action="/room" method="POST">
+            <ul>
+
+                {% for group in groups %}
+                <button type="submit" class="recentsBtn" name="id" value="{{group[0]}}" >
+                    <li>
+                        <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_06.jpg" alt="">
+                        <div>
+                            <h2>{{ group[1]}}</h2>
+                            <small>{{ group[2]}}</small>
+                        </div>
+                    </li>
+                </button>
+                <hr>
+                {% endfor %}
+            </ul>
+        </form>
+        {% endif %}
     </aside>
       <div class="mssgs">
         <div class="msg_history" id="msg_history">
@@ -58,58 +79,59 @@
 <script type="text/javascript">
 
     var socketIO = io.connect();
+    const messageContainer = document.getElementById("msg_history")
+    messageContainer.scrollTop = messageContainer.scrollHeight;
     let data = {
         name: "{{myData[1]}}",
         room_id: "{{room_id}}",
         friend_id: "{{friendData[0]}}"
     }
-    const messageContainer = document.getElementById("msg_history")
-    messageContainer.scrollTop = messageContainer.scrollHeight;
-
-    socketIO.on('connect', function (){
-        socketIO.emit('join_private_room', data.name, data.room_id)
-    });
+    if ("{{room_id}}" != 0)
+    {
+        socketIO.on('connect', function (){
+            socketIO.emit('join_private_room', data.room_id)
+        });
 
     const showJoinOrLeave= (name, message) => {
-       const content = `
-        <div class="text-center m-4">
-            <small class="text-muted">${name} ${message}</small>
-        </div>
-       `
-       messageContainer.innerHTML += content;
-    }
-    socketIO.on("joinOrLeave", data => showJoinOrLeave(data.name, data.message))
+        const content = `
+         <div class="text-center m-4">
+             <small class="text-muted">${name} ${message}</small>
+         </div>
+        `
+        messageContainer.innerHTML += content;
+     }
+     socketIO.on("joinOrLeave", data => showJoinOrLeave(data.name, data.message))
 
-    const receive_mssg = ({id, message, date}) => {
-        let content = '';
-        if ( id != "{{myData[0]}}")
-        {
-            content = `
-            <div class="incoming_msg">
-                <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="User"> </div>
+        const receive_mssg = ({id, message, date}) => {
+            let content = '';
+            if ( id != "{{myData[0]}}")
+            {
+                content = `
+                <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="User"> </div>
                     <div class="received_msg">
                         <div class="received_withd_msg">
                             <p>${message}</p>
                             <span class="time_date"> ${date}</span>
+                        </div>
                     </div>
-                </div>
-            </div>`
-        }
-        else
-        {
-            content = `
-            <div class="outgoing_msg">
-                <div class="sent_msg">
-                    <p>${message}</p>
-                    <span class="time_date"> ${date}</span> </div>
-                </div>
-                `
+                </div>`
             }
+            else
+            {
+                content = `
+                <div class="outgoing_msg">
+                    <div class="sent_msg">
+                        <p>${message}</p>
+                        <span class="time_date"> ${date}</span> </div>
+                    </div>
+                    `
+                }
                 messageContainer.innerHTML += content;
             }
 
-            socketIO.on("receive_mssg", (data) => receive_mssg(data))
-
+        socketIO.on("receive_mssg", (data) => receive_mssg(data))
+    }
     const sendMessage = () => {
         const message = document.getElementById("message");
         if (message.value == "")

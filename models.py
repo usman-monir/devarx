@@ -344,3 +344,58 @@ class Users:
             if mydbCursor is not None:
                 mydbCursor.close()
 
+
+    def createGroup(self, name, description):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "insert into public_groups (group_name, group_description) values(%s,%s)"
+            args = (name, description)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            return ("Group Created", "success")
+
+        except Exception as e:
+            print(str(e))
+            mssg = str(e)
+            start_index = mssg.find('"') + 1
+            end_index = mssg.find('"', start_index)
+
+            if start_index != -1 and end_index != -1:
+                return (mssg[start_index:end_index], "warning")
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def getGroupData(self, room_id):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select * from public_groups where room_id=%s"
+            args = (room_id)
+            mydbCursor.execute(sql, args)
+            res = mydbCursor.fetchone()
+            return res
+
+        except Exception as e:
+            print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def getAllGroups(self):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select * from public_groups"
+            mydbCursor.execute(sql)
+            res = mydbCursor.fetchall()
+            return res
+
+        except Exception as e:
+            print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()

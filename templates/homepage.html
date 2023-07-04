@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <form class="room-form" method="POST" action="/">
-    <h4 class="mb-4 text-muted">ENTER THE CHAT ROOM </h4>
+    <h4 class="mb-4 text-muted">CREATE A PUBLIC GROUP</h4>
     <div class="form-group">
-        <p class="text-muted">Name</p>
-        {{ form.name(class="form-control", value= name, placeholder="choose a name..")}}
+        <p class="text-muted">Group Title</p>
+        {{ form.name(class="form-control", value= name, placeholder="title..")}}
     </div>
     <div class="form-group">
-        <p class="text-muted">Room Code</p>
-        {{ form.code(class="form-control", value= code, placeholder="Enter Code..")}}
+        <p class="text-muted">Group Description</p>
+        {{ form.description(class="form-control", value= description, placeholder="description..")}}
         </div>
-    <button type="submit" name="join" class="btn btn-primary">Join Room</button>
-    <button type="submit" name="create" class="btn btn-success">Create a Room</button>
+    <!-- <button type="submit" name="join" class="btn btn-primary">Join Room</button> -->
+    <button type="submit" name="create" class="btn btn-success">Create</button>
   </form>
   {{ response }}
 {% endblock %}
