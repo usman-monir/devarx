@@ -1,36 +1,42 @@
-{% extends "base.html" %}
-{% block content%}
-    <form method="post" action="/login">
-    {{ form.hidden_tag() }}
-    <fieldset>
-        <legend class="border-bottom mb-4">Login</legend>
+{% extends "base.html" %} {% block content%}
+<form method="POST" action="/login">
+  {{ form.hidden_tag() }}
+  <fieldset>
+    <legend class="border-bottom mb-4">Login</legend>
 
-        <div class="form-group">
-        {{ form.email.label(class="form-control-label") }} {% if
-        form.email.errors %} {{ form.email(class="form-control
-        form-control-lg is-invalid") }} {% for error in form.email.errors %}
-        <span>{{ error }}</span>
-        {% endfor %} {% else %} {{ form.email(class="form-control
-        form-control-lg") }} {% endif %}
-        </div>
-
-        <div class="form-group">
-        {{ form.password.label(class="form-control-label") }} {% if
-        form.password.errors %} {{ form.password(class="form-control
-        form-control-lg is-invalid") }} {% for error in form.password.errors
-        %}
-        <span>{{ error }}</span>
-        {% endfor %} {% else %} {{ form.password(class="form-control
-        form-control-lg") }} {% endif %}
-        </div>
-    </fieldset>
-
-    <div class="d-flex align-items-center">
-        {{ form.submit(class="btn btn-primary mr-5") }}
-        <a class="link ml-5" href="{{ url_for('reset_request')}}">Forgot Password?</a>
+    <div class="form-group">
+      {{ form.email.label(class="form-control-label") }} {% if form.email.errors
+      %} {{ form.email(class="form-control form-control-lg is-invalid") }} {%
+      for error in form.email.errors %}
+      <span>{{ error }}</span>
+      {% endfor %} {% else %} {{ form.email(class="form-control
+      form-control-lg") }} {% endif %}
     </div>
-    <div class="container">
-        <a href="{{url_for('google_login')}}" class="btn btn-primary">Continue with google</a>
+
+    <div class="form-group">
+      {{ form.password.label(class="form-control-label") }} {% if
+      form.password.errors %} {{ form.password(class="form-control
+      form-control-lg is-invalid") }} {% for error in form.password.errors %}
+      <span>{{ error }}</span>
+      {% endfor %} {% else %} {{ form.password(class="form-control
+      form-control-lg") }} {% endif %}
     </div>
-    </form>
+  </fieldset>
+
+  <div class="d-flex align-items-center">
+    {{ form.submit(class="btn btn-primary mr-5") }}
+    <a class="link ml-5" href="{{ url_for('reset_request')}}"
+      >Forgot Password?</a
+    >
+  </div>
+    <a class="google-btn" href="{{url_for('google_login')}}">
+      <div class="google-icon-wrapper">
+        <img
+          class="google-icon"
+          src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
+        />
+      </div>
+      <p class="btn-text"><b>Continue with google</b></p>
+    </a>
+</form>
 {% endblock %}

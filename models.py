@@ -41,9 +41,15 @@ class Users:
     def insertToUsers(self, u, e, p):
         try:
             mydbCursor = db.cursor()
-            sql = 'INSERT INTO Users (username, email, password) VALUES (%s, %s, %s)'
-            args = (u, e, p)
-            mydbCursor.execute(sql, args)
+            sql1 = 'SELECT * from Users where email=%s'
+            args1 = (e)
+            mydbCursor.execute(sql1, args1)
+            res = mydbCursor.fetchone()
+            if res:
+                return ("User already exists with this email!", "danger")
+            sql2 = 'INSERT INTO Users (username, email, password) VALUES (%s, %s, %s)'
+            args2 = (u, e, p)
+            mydbCursor.execute(sql2, args2)
             db.commit()
             return ("Added to Users", "success")
         except Exception as e:
@@ -74,8 +80,7 @@ class Users:
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
-
-        return rows
+            return rows
 
 
     def getUserId(self, email, password):

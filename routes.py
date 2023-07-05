@@ -11,7 +11,6 @@ from pip._vendor import cachecontrol
 import google.auth.transport.requests
 from string import ascii_uppercase
 from datetime import datetime
-import random
 import os
 import pathlib
 import requests
@@ -69,6 +68,7 @@ def google_login():
 def callback():
     try:
         if session.get("state") != request.args.get("state"):
+            flash("Please Login again Due to some Security Issue!", "warning")
             return redirect(url_for("login"))
 
         flow.fetch_token(authorization_response=request.url)
@@ -82,35 +82,43 @@ def callback():
             id_token=credentials._id_token,
             request=token_request,
             audience=GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=-1,
+            clock_skew_in_seconds=2,
         )
         print(id_info)
         session["email"] = id_info.get("email")
         session["name"] = id_info.get("name")
         usersHandler = Users()
-        res = usersHandler.insertToUsers(id_info.get("name") , id_info.get("email"), "1234")
-        flash(res[0], res[1])
+        addedAlready =  usersHandler.verify(id_info.get("email"))
+        if not addedAlready:
+            res = usersHandler.insertToUsers(id_info.get("name") , id_info.get("email"), "1234")
+            flash(res[0], res[1])
         id = usersHandler.getUserId(id_info.get("email"), "1234")
         session["id"] = id
-        GroupForm = GroupForm()
-        return render_template("homepage.html", form=GroupForm, title="Home", name=session.get("name"))
+        session["login_with_google"] = True
+        return redirect(url_for("homepage"))
     except Exception as e:
         flash("SECURITY CHECK: " + str(e), "danger")
+        print("SECURITY CHECK: " + str(e), "danger")
     return redirect(url_for("login"))
 
 
 @app.route("/", methods=["GET", "POST"])
 def homepage():
     if session.get("email") is None or session.get("name") is None:
+        print("redirecting to login")
         return redirect(url_for("login"))
+    if session.get("login_with_google"):
+        flash("Logged in with Google", "success")
+    else:
+        flash("Logged in with Email Successfully", "success")
     form = GroupForm()
     if request.method == "POST":
+        print("Post request")
         name = form.name.data
         description = form.description.data
-
         usersHandler = Users()
         res = usersHandler.createGroup(name, description)
-        flash(res[0],[1])
+        flash(res[0],res[1])
         return redirect(url_for("room", room_id=1))
     return render_template("homepage.html", form= form, title= "Home")
 
@@ -134,33 +142,35 @@ def room():
 def signup():
     session.clear()
     form = SignupForm()
-    usersHandler = Users()
-    if form.validate_on_submit():
-        res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
-        if res:
-            flash(res, "danger")
-        else:
-            return redirect(url_for("login"))
+    if request.method == "POST":
+        print(form.errors, form.validate_on_submit())
+        print(form.username.data, form.email.data, form.password.data, form.confirm_password.data)
+        if len(form.password.data) >= 4 and form.password.data == form.confirm_password.data:
+            print("validated")
+            usersHandler = Users()
+            res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
+            return redirect(url_for("login", mssg=res[0], type=res[1]))
     return render_template('Signup.html', title="Signup", form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    session.clear()
+    if request.args.get("mssg"):
+        flash(request.args.get("mssg"), request.args.get("type"))
+    loginForm = LoginForm()
     if request.method == "POST":
-        if form.validate_on_submit():
             usersHandler = Users()
-            userData = usersHandler.login(form.email.data, form.password.data)
+            userData = usersHandler.login(loginForm.email.data, loginForm.password.data)
+            print("User Data:", userData)
             if userData:
                 session['id'] = userData[0]
                 session['name'] = userData[1]
                 session['email'] = userData[2]
-                flash("Logged in successfully!", "success")
-                return redirect(url_for("homepage"))
-            else:
-                flash("Incorrect email or password!", "danger")
-                return redirect(url_for("login"))
-    return render_template('login.html', title="Login", form=form)
+                session["login_with_google"] = False
+                return redirect(url_for('homepage'))
+            return redirect(url_for("login", mssg="Incorrect email or password!", type="danger"))
+    return render_template('login.html', title="Login", form=loginForm)
 
 
 @app.route('/reset_password', methods=['GET', 'POST'])
@@ -304,6 +314,7 @@ def notifications():
     if "id" in session:
         usersHandler = Users()
         pendingRequests = usersHandler.getPendingRequests(session.get("id"))
+        print("pending requests:", pendingRequests, " id: ", session.get("id"))
         usersData = []
         for request in pendingRequests:
             usersData.append(usersHandler.getUserData(request[0]))
@@ -368,19 +379,21 @@ def startChat():
 
 @socketIO.on("connect")
 def connect():
-    room_id = session.get("room_id")
-    id = session.get("id")
-    name = session.get("name")
-    if room_id is None or id is None:
-        flash("Cannot connect with socketIO", "danger")
-        print("Cannot connect with socketIO")
-        return
+    if "id" in session:
+        room_id = session.get("room_id")
+        id = session.get("id")
+        name = session.get("name")
+        if room_id is None or id is None:
+            flash("Cannot connect with socketIO", "danger")
+            print("Cannot connect with socketIO")
+            return
 
-    flash("Connected Successfully", "success")
-    join_room(room_id)
-    socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
-    print(f"{name} has joined the room-{room_id}")
-
+        flash("Connected Successfully", "success")
+        join_room(room_id)
+        socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+        print(f"{name} has joined the room-{room_id}")
+    else:
+        flash("Cannot connect cz user is not login!", "danger")
 
 @socketIO.on("disconnect")
 def disconnect():
