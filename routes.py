@@ -49,13 +49,6 @@ def generateChatResponse(prompt):
 
 # routes
 
-@app.route("/get", methods=["GET", "POST"])
-def chatWithBot():
-    mssg = request.form.get("mssg")
-    res = generateChatResponse(mssg)
-    return res
-
-
 @app.route("/google_login")
 def google_login():
     session.clear()
@@ -102,15 +95,22 @@ def callback():
     return redirect(url_for("login"))
 
 
+@app.route("/get", methods=["GET", "POST"])
+def chatWithBot():
+    mssg = request.form.get("mssg")
+    res = generateChatResponse(mssg)
+    return res
+
+
 @app.route("/", methods=["GET", "POST"])
 def homepage():
     if session.get("email") is None or session.get("name") is None:
         print("redirecting to login")
         return redirect(url_for("login"))
     if session.get("login_with_google"):
-        flash("Logged in with Google", "success")
+        flash("Logged in with Google - Hello " + session.get("name"), "success")
     else:
-        flash("Logged in with Email Successfully", "success")
+        flash("Logged in with Email - Hello " + session.get("name"), "success")
     form = GroupForm()
     if request.method == "POST":
         print("Post request")
@@ -121,21 +121,6 @@ def homepage():
         flash(res[0],res[1])
         return redirect(url_for("room", room_id=1))
     return render_template("homepage.html", form= form, title= "Home")
-
-
-@app.route("/room", methods=["GET", "POST"])
-def room():
-    if "id" in session:
-        room_id = request.form.get("id")
-        print("room_id: ", room_id)
-        if room_id is None:
-            return redirect(url_for("homepage"))
-        usersHandler = Users()
-        res = usersHandler.getGroupData(room_id)
-        print("room_res: ", res)
-        session["room_id"] = room_id
-        return render_template("room.html", title="Room: " + room_id, name=session.get("name"), connections=getAllConnections(),groups=getAllGroups(), group_name=res[1], group_description=res[2])
-    return redirect('/')
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -367,11 +352,31 @@ def startChat():
         prevChat = usersHandler.getPrevChat(room_id)
         chat = []
         if prevChat is not None:
-            for message in prevChat:
-                chat.append(message)
+            for data in prevChat:
+                chat.append(data)
         return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
     else:
         return redirect('/')
+
+
+@app.route("/room", methods=["GET", "POST"])
+def room():
+    if "id" in session:
+        room_id = request.form.get("id")
+        if room_id is None:
+            return redirect(url_for("homepage"))
+        usersHandler = Users()
+        id = session.get("id")
+        session["room_id"] = room_id
+        myData = usersHandler.getUserData(id)
+        groupData = usersHandler.getGroupData(room_id)
+        prevChat = usersHandler.getPrevGroupChat(room_id)
+        chat =[]
+        if prevChat is not None:
+            for data in prevChat:
+                chat.append(data)
+        return render_template("room.html", title="Room: " + room_id, myData=myData, groupData=groupData, prevChat=chat, connections=getAllConnections(),groups=getAllGroups())
+    return redirect('/')
 
 
 # socket methods
@@ -383,11 +388,9 @@ def connect():
         id = session.get("id")
         name = session.get("name")
         if room_id is None or id is None:
-            flash("Cannot connect with socketIO", "danger")
             print("Cannot connect with socketIO")
             return
 
-        flash("Connected Successfully", "success")
         join_room(room_id)
         socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
         print(f"{name} has joined the room-{room_id}")
@@ -419,18 +422,19 @@ def send_private_message(room_id, friend_id, message):
     socketIO.emit('receive_mssg', {"id":session.get("id"), "message": message, "date":formatted_date}, to=room_id)
 
 
-@socketIO.on("send_message")
-def send_message(message):
+@socketIO.on("send_group_message")
+def send_group_message(message):
+    usersHandler = Users()
     name = session.get("name")
     room_id = session.get("room_id")
-
     now = datetime.now()
     formatted_date = now.strftime("%I:%M %p | %B %d")
-
+    res = usersHandler.saveGroupMessage(room_id, session.get("id"),name, message,formatted_date)
     content = {
         "name": name,
         "message": message,
-        "date": formatted_date
+        "date": formatted_date,
+        "saved": res
     }
 
     socketIO.emit("show_message", content, to=room_id)

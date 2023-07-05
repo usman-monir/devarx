@@ -47,9 +47,9 @@ h2,h3{
 }
 .recents li small{
 	display: block;
-	color:#d6d3d3;
-	margin:5px 0;
-	font-size: 9px;
+	color:#d1d1d1;
+	margin:4px 0;
+	font-size: 8px;
 }
 .recents .heading
 {
@@ -64,4 +64,9 @@ h2,h3{
     border: none;
     outline: none;
     background-color: inherit;
+}
+.group-description
+{
+	font-size: 10px;
+	margin-left: 20px;
 }

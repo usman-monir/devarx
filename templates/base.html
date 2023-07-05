@@ -75,7 +75,7 @@
     </div>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="{{ url_for('static', filename='js/chatbot.js')}}"></script>
-    <div class="container p-5">
+    <div class="container p-2">
       <form action="/searchResult" method="get" class="d-flex col-5">
         <input name="search" value="{{request.args.get('search') or ''}}"
                 class="form-control me-2" type="search" placeholder="Search" aria-label="Search">

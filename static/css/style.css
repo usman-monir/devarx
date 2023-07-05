@@ -33,6 +33,11 @@ body {
 	background: #e8f6ff;
 }
 
+.incoming_msg
+{
+	margin-bottom: 15px;
+}
+
 .incoming_msg_img {
 	display: inline-block;
 	width: 6%;

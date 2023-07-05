@@ -314,24 +314,6 @@ class Users:
                 mydbCursor.close()
 
 
-    def getPrevChat(self, room_id):
-        try:
-            mydbCursor = db.cursor()
-
-            sql = "select * from chat_history where room_id = %s"
-            args=(room_id)
-            mydbCursor.execute(sql, args)
-            result = mydbCursor.fetchall()
-            return result
-
-        except Exception as e:
-            print(str(e))
-
-        finally:
-            if mydbCursor is not None:
-                mydbCursor.close()
-
-
     def saveMessage(self, room_id, sender_id, reciever_id, message_text, time_send):
         try:
             mydbCursor = db.cursor()
@@ -342,6 +324,24 @@ class Users:
             db.commit()
             res = mydbCursor.fetchall()
             print(res)
+        except Exception as e:
+            print(str(e))
+
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def getPrevChat(self, room_id):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select * from chat_history where room_id = %s"
+            args=(room_id)
+            mydbCursor.execute(sql, args)
+            result = mydbCursor.fetchall()
+            return result
+
         except Exception as e:
             print(str(e))
 
@@ -401,6 +401,38 @@ class Users:
 
         except Exception as e:
             print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+    def saveGroupMessage(self,room_id, sender_id ,name, message_text,time_send):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "insert into public_group_chat_history values(%s,%s,%s,%s,%s)"
+            args = (room_id, sender_id ,name, message_text,time_send)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            mydbCursor.close()
+            return True
+        except Exception as e:
+            print(str(e))
+            return False
+
+
+    def getPrevGroupChat(self, room_id):
+        try:
+            mydbCursor = db.cursor()
+
+            sql = "select * from public_group_chat_history where room_id = %s"
+            args=(room_id)
+            mydbCursor.execute(sql, args)
+            result = mydbCursor.fetchall()
+            return result
+
+        except Exception as e:
+            print(str(e))
+
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
