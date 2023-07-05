@@ -146,7 +146,6 @@ def signup():
         print(form.errors, form.validate_on_submit())
         print(form.username.data, form.email.data, form.password.data, form.confirm_password.data)
         if len(form.password.data) >= 4 and form.password.data == form.confirm_password.data:
-            print("validated")
             usersHandler = Users()
             res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
             return redirect(url_for("login", mssg=res[0], type=res[1]))
