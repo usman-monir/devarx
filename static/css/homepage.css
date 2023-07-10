@@ -57,6 +57,18 @@
     position: relative
 }
 
+.profile-body
+{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.about-me
+{
+    min-width: 300px;
+}
+
 .b-minus-1,
 .b-minus-10,
 .b-minus-2,
@@ -175,7 +187,7 @@
 }
 
 .profile-content {
-    padding: 25px;
+    padding: 25px 0;
     border-radius: 4px
 }
 
@@ -413,7 +425,7 @@ select.form-control:not([size]):not([multiple]) {
 .timeline:before {
     content: '';
     position: absolute;
-    top: 5px;
+    top: 25px;
     bottom: 5px;
     width: 5px;
     background: #2d353c;

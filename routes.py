@@ -399,7 +399,7 @@ def startChat():
         id = session.get("id")
         myData = usersHandler.getUserData(id)
         if request.method == "GET":
-            return render_template('chat.html', room_id=0, myData=None, friendData=None, groups=getAllGroups(), connections=getAllConnections(), title="Chat")
+            return render_template('chat.html', profileData=getProfileData(), room_id=0, myData=None, friendData=None, groups=getAllGroups(), connections=getAllConnections(), title="Chat")
         friend_id = int(request.form.get("id"))
         friendData = usersHandler.getUserData(friend_id)
         room_id = usersHandler.getRoomId(id,friend_id)[0]
@@ -408,7 +408,7 @@ def startChat():
         if prevChat is not None:
             for data in prevChat:
                 chat.append(data)
-        return render_template('chat.html', myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
+        return render_template('chat.html', profileData=getProfileData(), myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
     else:
         return redirect('/')
 
