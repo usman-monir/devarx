@@ -432,6 +432,37 @@ def room():
         return render_template("room.html", title="Room: " + room_id, myData=myData, groupData=groupData, prevChat=chat, connections=getAllConnections(),groups=getAllGroups())
     return redirect('/')
 
+@app.route("/uploadDp", methods=["GET","POST"])
+def uploadDp():
+    if "id" in session:
+        if request.method == 'POST':
+            # check if the post request has the file part
+            print(request.files)
+            if 'dp_file' not in request.files:
+                flash('No file part', 'danger')
+                return redirect('/')
+            file = request.files['dp_file']
+            # if user does not select file or submit a empty part without filename
+            if file.filename == '':
+                flash('No selected file', 'warning')
+                return redirect(request.url)
+
+            if file:
+                usersHandler = Users()
+                prev = usersHandler.getDp(session.get("id"))[0]
+                prev = prev.split("/")[-1]
+
+                if prev != "'https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg'":
+                    os.remove(os.path.join(config.props.get("UPLOAD_FOLDER"), prev))
+
+                filename = str(session.get("id")) + "-dp." + file.filename.split(".")[-1]
+                file.save(os.path.join(config.props.get('UPLOAD_FOLDER'), filename))
+                usersHandler.changeDp(session.get("id"),filename)
+
+        return redirect('/editProfile')
+    else:
+        return redirect('/')
+
 
 # socket methods
 

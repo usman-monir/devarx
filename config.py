@@ -11,5 +11,6 @@ props = dict(
     MAIL_USE_TLS  =  True,
     MAIL_USERNAME  =  'devarxyu@gmail.com',
     MAIL_PASSWORD  =  'wuqpcdxbqicycfih',
-    MAIL_DEFAULT_SENDER  =  'devarxyu@gmail.com'
+    MAIL_DEFAULT_SENDER  =  'devarxyu@gmail.com',
+    UPLOAD_FOLDER = '/Users/a1706/Documents/web/devarx/static/images'
 )

@@ -491,3 +491,37 @@ class Users:
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
+
+
+    def getDp(self, id):
+        try:
+            mydbCursor = db.cursor()
+            mydbCursor.execute("select profile_photo from profiles where id=%s",id)
+            path = mydbCursor.fetchone()
+            return path
+
+        except Exception as e:
+            print(str(e))
+            return None
+
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def changeDp(self, id, filename):
+            try:
+                mydbCursor = db.cursor()
+                path = "images/"+filename
+                query="update profiles set profile_photo=%s where id=%s"
+                args=(path,id)
+
+                mydbCursor.execute(query,args)
+                self.connection.commit()
+                return True
+            except Exception as e:
+                print(str(e))
+                return False
+            finally:
+                if mydbCursor is not None:
+                    mydbCursor.close()
