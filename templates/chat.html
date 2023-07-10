@@ -86,23 +86,11 @@
         room_id: "{{room_id}}",
         friend_id: "{{friendData[0]}}"
     }
-    if ("{{room_id}}" != 0)
-    {
-        socketIO.on('connect', function (){
-            socketIO.emit('join_private_room', data.room_id)
-        });
+    socketIO.on('connect', function (){
+        socketIO.emit('join_private_room', data.room_id)
+    });
 
-    const showJoinOrLeave= (name, message) => {
-        const content = `
-         <div class="text-center m-4">
-             <small class="text-muted">${name} ${message}</small>
-         </div>
-        `
-        messageContainer.innerHTML += content;
-     }
-     socketIO.on("joinOrLeave", data => showJoinOrLeave(data.name, data.message))
-
-        const receive_mssg = ({id, message, date}) => {
+    const receive_mssg = ({id, message, date}) => {
             let content = '';
             if ( id != "{{myData[0]}}")
             {
@@ -126,12 +114,10 @@
                         <span class="time_date"> ${date}</span> </div>
                     </div>
                     `
-                }
-                messageContainer.innerHTML += content;
             }
-
-        socketIO.on("receive_mssg", (data) => receive_mssg(data))
-    }
+                messageContainer.innerHTML += content;
+        }
+            socketIO.on("receive_mssg", (data) => receive_mssg(data))
     const sendMessage = () => {
         const message = document.getElementById("message");
         if (message.value == "")

@@ -9,7 +9,6 @@ from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
-from string import ascii_uppercase
 from datetime import datetime
 import os
 import pathlib
@@ -87,7 +86,7 @@ def callback():
             flash(res[0], res[1])
         id = usersHandler.getUserId(id_info.get("email"), "1234")
         session["id"] = id
-        session["login_with_google"] = True
+        session["logged_in"] = True
         return redirect(url_for("homepage"))
     except Exception as e:
         flash("SECURITY CHECK: " + str(e), "danger")
@@ -95,45 +94,26 @@ def callback():
     return redirect(url_for("login"))
 
 
-@app.route("/get", methods=["GET", "POST"])
-def chatWithBot():
-    mssg = request.form.get("mssg")
-    res = generateChatResponse(mssg)
-    return res
-
-
-@app.route("/", methods=["GET", "POST"])
-def homepage():
-    if session.get("email") is None or session.get("name") is None:
-        print("redirecting to login")
-        return redirect(url_for("login"))
-    if session.get("login_with_google"):
-        flash("Logged in with Google - Hello " + session.get("name"), "success")
-    else:
-        flash("Logged in with Email - Hello " + session.get("name"), "success")
-    form = GroupForm()
-    if request.method == "POST":
-        print("Post request")
-        name = form.name.data
-        description = form.description.data
-        usersHandler = Users()
-        res = usersHandler.createGroup(name, description)
-        flash(res[0],res[1])
-        return redirect(url_for("room", room_id=1))
-    return render_template("homepage.html", form= form, title= "Home")
-
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     session.clear()
     form = SignupForm()
     if request.method == "POST":
-        print(form.errors, form.validate_on_submit())
-        print(form.username.data, form.email.data, form.password.data, form.confirm_password.data)
-        if len(form.password.data) >= 4 and form.password.data == form.confirm_password.data:
+        username = form.username.data
+        email = form.email.data
+        password = form.password.data
+        confirm_password = form.confirm_password.data
+        if len(password) >= 4 and password == confirm_password:
             usersHandler = Users()
-            res = usersHandler.insertToUsers(form.username.data, form.email.data, form.password.data)
+            res = usersHandler.insertToUsers(username, email, password)
+            id = usersHandler.getUserId(email, password)
+            usersHandler.saveProfile(id,username,email,'https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg')
             return redirect(url_for("login", mssg=res[0], type=res[1]))
+        else:
+            if len(password) < 4:
+                flash("Password should be at least 4 characters ", "warning")
+            elif password != confirm_password:
+                flash("Password not matched to confirmation password", "warning")
     return render_template('Signup.html', title="Signup", form=form)
 
 
@@ -151,8 +131,8 @@ def login():
                 session['id'] = userData[0]
                 session['name'] = userData[1]
                 session['email'] = userData[2]
-                session["login_with_google"] = False
-                return redirect(url_for('homepage'))
+                session["logged_in"] = True
+                return redirect(url_for('editProfile'))
             return redirect(url_for("login", mssg="Incorrect email or password!", type="danger"))
     return render_template('login.html', title="Login", form=loginForm)
 
@@ -206,6 +186,54 @@ def reset_with_token(token):
     return render_template('change_password.html', title='Change Password', form=form)
 
 
+@app.route("/get", methods=["GET", "POST"])
+def chatWithBot():
+    mssg = request.form.get("mssg")
+    res = generateChatResponse(mssg)
+    return res
+
+
+@app.route("/", methods=["GET", "POST"])
+def homepage():
+    if session.get("email") is None or session.get("name") is None:
+        return redirect(url_for("login"))
+    if session.get("logged_in"):
+        flash("Hello " + session.get("name"), "success")
+        session.pop("logged_in")
+    if request.args.get('mssg') and request.args.get('type'):
+        flash(request.args.get('mssg'), request.args.get('type'))
+
+    return render_template("homepage.html", profileData = getProfileData(), title= "Home")
+
+
+@app.route("/editProfile", methods=["GET","POST"])
+def editProfile():
+    if session.get("email") is None or session.get("name") is None:
+        return redirect(url_for("login"))
+    usersHandler = Users()
+    profileData = getProfileData()
+    if profileData is None:
+        return redirect('/')
+    if request.method == "POST":
+        for key in request.form:
+            profileData[key] = request.form.get(key)
+        res = usersHandler.updateProfile(profileData)
+        return redirect(url_for("homepage", mssg=res[0], type=res[1]))
+    return render_template("editProfile.html", profileData=profileData)
+
+
+@app.route("/createGroup", methods=["GET","POST"])
+def createGroup():
+    form = GroupForm()
+    if request.method == "POST":
+        name = form.name.data
+        description = form.description.data
+        usersHandler = Users()
+        res = usersHandler.createGroup(name, description)
+        return redirect(url_for("room", room_id=1))
+    return render_template("createGroup.html", form=form, title="Create A Group")
+
+
 @app.route("/searchResult", methods=["GET","POST"])
 def getSearchResults():
     if "id" in session:
@@ -223,7 +251,33 @@ def getSearchResults():
         return render_template("searchUsers.html", users=usersData, connections=getAllConnectionIds(), search=username, title="Add Connections")
     else:
         flash("Something went wrong!", "warning")
-        return redirect(url_for("homepage"))
+        return redirect('/')
+
+
+def getProfileData():
+    usersHandler = Users()
+    res = usersHandler.getProfile(session.get("id"))
+    if res is None:
+        return res
+    return {
+            "id": res[0],
+            "username": res[1] or '',
+            "email": res[2] or '',
+            "firstname": res[3] or '',
+            "lastname": res[4] or '',
+            "about": res[5] or '',
+            "phone_number": res[6] or '',
+            "address": res[7]or '',
+            "education": res[8] or '',
+            "institution": res[9]or '',
+            "interests": res[10]or '',
+            "country": res[11]or '',
+            "state": res[12]or '',
+            "experience": res[13] or '',
+            "additional_details": res[14] or '',
+            "profile_photo": res[15] or '',
+            "cover_photo": res[16] or ''
+    }
 
 
 def getAllConnectionIds():
@@ -405,7 +459,7 @@ def disconnect():
 
     socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
     print(f"{name} has left the room-{room_id}")
-    redirect(url_for("homepage"))
+    redirect('/')
 
 
 @socketIO.on("join_private_room")

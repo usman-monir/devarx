@@ -126,11 +126,11 @@
                         <span class="time_date"> ${date}</span> </div>
                     </div>
                     `
-                }
-                messageContainer.innerHTML += content;
             }
+                messageContainer.innerHTML += content;
+        }
 
-            socketIO.on("show_message", (data) => showMessage(data))
+        socketIO.on("show_message", (data) => showMessage(data))
 
     const sendMessage = () => {
         const message = document.getElementById("message");

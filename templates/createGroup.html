@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="room-form" method="POST" action="/">
+    <h4 class="mb-4 text-muted">CREATE A PUBLIC GROUP</h4>
+    <div class="form-group">
+        <p class="text-muted">Group Title</p>
+        {{ form.name(class="form-control", placeholder="title..")}}
+    </div>
+    <div class="form-group">
+        <p class="text-muted">Group Description</p>
+        {{ form.description(class="form-control", value= description, placeholder="description..")}}
+        </div>
+    <button type="submit" name="create" class="btn btn-success">Create</button>
+  </form>
+{% endblock %}

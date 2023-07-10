@@ -97,8 +97,7 @@ class Users:
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
-
-        return rows
+            return rows
 
     def getUserNames(self):
         try:
@@ -130,6 +129,62 @@ class Users:
         finally:
             if mydbCursor is not None:
                 mydbCursor.close()
+
+
+    # profile
+    def saveProfile(self, id, name, email, profile_photo):
+        try:
+            mydbCursor = db.cursor()
+            sql = "insert into profiles (id, username, email, profile_photo) values (%s,%s,%s,%s)"
+            args = (id, name, email, profile_photo)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            rows = mydbCursor.fetchone()
+            return rows
+        except Exception as e:
+            print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def getProfile(self, id):
+        try:
+            mydbCursor = db.cursor()
+            sql = "select * from Profiles where id=%s"
+            args = (id)
+            mydbCursor.execute(sql, args)
+            db.commit()
+            rows = mydbCursor.fetchone()
+            return rows
+        except Exception as e:
+            print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
+
+    def updateProfile(self, profileData):
+        try:
+            mydbCursor = db.cursor()
+            sql = "UPDATE profiles SET "
+            args = []
+            for key, value in profileData.items():
+                sql += f"{key} = %s, "
+                args.append(value)
+            sql = sql[:-2]
+            sql += " WHERE id = %s"
+            args.append(profileData.get('id'))
+            mydbCursor.execute(sql, args)
+            db.commit()
+            return ("Profile Updated Successfully!", "success")
+        except Exception as e:
+            print(str(e))
+            return ("Profile cannot update!", "danger")
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+
 
 
     def __AlreadySent__(self, sender_id, reciever_id):
