@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <video id="localVideo" autoplay></video>
+
+    <div>
+        <button class="btn btn-danger" onclick="endVideo()" id="endCallButton">End Call</button>
+        <button class="btn btn-warning" onclick="playPause()" id="pauseVideoButton">Pause Video</button>
+        <button class="btn btn-warning" onclick="muteUnmute()" id="muteAudioButton">Mute Audio</button>
+    </div>
+    <script>
+        const socket = io.connect();
+        console.log(socket)
+        let localStream;
+        let isVideoPaused = false;
+        let isAudioMuted = false;
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function(stream) {
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = stream;
+                localStream = stream;
+
+                socket.emit('broadcaster');
+            })
+            .catch(function(err) {
+                console.error('Error accessing media devices:', err);
+            });
+
+        socket.on('watcher', function() {
+            const pc = new RTCPeerConnection();
+
+            pc.onicecandidate = function(event) {
+                if (event.candidate) {
+                    socket.emit('candidate', event.candidate);
+                }
+            };
+
+            pc.ontrack = function(event) {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    stream.getTracks().forEach(function(track) {
+                        pc.addTrack(track, stream);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Error accessing media devices:', err);
+                });
+
+            socket.on('candidate', function(candidate) {
+                pc.addIceCandidate(new RTCIceCandidate(candidate));
+            });
+
+            socket.on('offer', function(offer) {
+                pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+                pc.createAnswer()
+                    .then(function(answer) {
+                        pc.setLocalDescription(answer);
+                        socket.emit('answer', answer);
+                    })
+                    .catch(function(err) {
+                        console.error('Error creating answer:', err);
+                    });
+            });
+
+            socket.on('connect', function() {
+                console.log('connected')
+                socket.emit('watcher');
+            });
+
+            socket.on('disconnect', function() {
+                pc.close();
+            });
+        });
+        function playPause() {
+            var video = document.getElementById('localVideo');
+            if (video.paused) {
+                video.play();
+                document.getElementById('pauseVideoButton').innerText = "Pause Video"
+            }
+            else {
+                video.pause();
+                document.getElementById('pauseVideoButton').innerText = "Play Video"
+            }
+        }
+        function muteUnmute() {
+            var video = document.getElementById('localVideo');
+            if (video.muted) {
+                video.muted = false;
+                document.getElementById('muteAudioButton').innerText = "Mute Audio"
+            }
+            else {
+                video.muted = true;
+                document.getElementById('muteAudioButton').innerText = "Un-Mute Audio "
+            }
+        }
+        function endVideo() {
+            var video = document.getElementById('localVideo');
+            video.style.display = "None"
+            window.location.href = "http://127.0.0.1:5000/";
+        }
+
+    </script>
+{% endblock %}

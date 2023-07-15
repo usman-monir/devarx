@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<form action="/editProfile" method="POST">
+<form action="/editProfile" method="POST" enctype="multipart/form-data">
     <div class="container rounded bg-white mt-5 mb-5">
         <div class="row">
-            <div class="col-md-3 border-right">
-                <form method="POST" id="dpForm" action="/uploadDp" enctype="multipart/form-data">
-                    <input type='file' name="dp_file" class='input-file' id="dpInp">
-                    <i onclick="takeDpInput()" id='input_btn' class="fa fa-camera cam camera_icon"></i>
-                </form>
-                <div class="d-flex flex-column align-items-center text-center p-3 py-5">
-                    <img class="rounded-circle mt-5" width="150px" src="{{profileData.profile_photo}}"><span class="font-weight-bold">{{profileData.username}}</span><span class="text-black-50">{{profileData.email}}</span><span> </span>
-                </div>
+            <div class="col-md-3 border-right" id="dpDiv">
+                    <input type='file' name="dp_file" class='input-file' id="dpInp" hidden>
+                    <div class="d-flex flex-column align-items-center text-center p-3 py-5">
+                        <img class="my-4" width="150px" src="{{profileData.profile_photo}}"><span class="font-weight-bold">{{profileData.username}}</span><span class="text-black-50">{{profileData.email}}</span><span> </span>
+                        <i onclick="takeDpInput()" id='input_btn' class="fa fa-camera cam camera_icon"></i>
+                    </div>
             </div>
             <div class="col-md-5 border-right">
                 <div class="p-3 py-5">
@@ -49,17 +47,17 @@
     </div>
 </form>
 <script>
-    function takeDpInput () {
-        document.getElementById('dpInp').click();
-        let dpForm = document.getElementById('dpForm');
-        console.log("dpForm: " , dpForm)
+    function takeDpInput() {
+        let dpInp = document.getElementById('dpInp').click();
+        let dpForm = document.getElementById('dpDiv');
+        console.log("dpForm:", dpForm);
         let sbt = document.getElementById('sbt');
-        if(sbt != null) sbt.remove();
+        if (sbt != null) sbt.remove();
         let y = document.createElement("input");
-            y.setAttribute("type", "submit");
-            y.setAttribute("placeholder", "submit");
-            y.setAttribute("id", "sbt");
-            dpForm.append(y);
+        y.setAttribute("type", "submit");
+        y.setAttribute("placeholder", "submit");
+        y.setAttribute("id", "sbt");
+        dpForm.append(y);
     }
 </script>
 {% endblock %}

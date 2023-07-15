@@ -735,11 +735,6 @@ strong.chat_time {
 }
 
 
-
-html, body {
-  background: #efefef;
-  height:100%;
-}
 #center-text {
   display: flex;
   flex: 1;

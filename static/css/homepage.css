@@ -37,7 +37,6 @@
     z-index: 10;
     margin: 0 0 -20px;
     padding: 3px;
-    border-radius: 50%;
 }
 
 .profile-header-img img {
@@ -643,4 +642,17 @@ select.form-control:not([size]):not([multiple]) {
 
 .text-danger, .text-red {
     color: #ff5b57!important;
+}
+.search_form {
+    border-color: transparent;
+  }
+
+.search_form:focus {
+border-color: transparent;
+box-shadow: inset 0px 0px 0px 1px transparent;
+}
+.people_list
+{
+    position: relative; height: 400px; overflow:auto;
+    max-width: 400px;
 }

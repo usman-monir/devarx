@@ -1,0 +1,56 @@
+{% extends "base.html" %} {% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="p-3">
+      <form
+        action="/searchResult"
+        method="get"
+        class="input-group rounded mb-3"
+      >
+        <input
+          name="search"
+          value="{{request.args.get('search') or ''}}"
+          class="form-control search_form rounded"
+          type="search"
+          placeholder="Search"
+          aria-label="Search"
+          aria-describedby="search-addon"
+        />
+        <button
+          type="submit"
+          class="input-group-text border-0"
+          id="search-addon"
+        >
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+
+      <div class="people_list">
+        <ul class="list-unstyled mb-0">
+          <li class="py-2 pr-5 border-bottom">
+            <div class="d-flex justify-content-between">
+              <div class="d-flex flex-row">
+                <div>
+                  <img
+                    src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp"
+                    alt="avatar"
+                    class="d-flex align-self-center me-3"
+                    width="60"
+                  />
+                </div>
+                <div class="pt-1 px-3">
+                  <p class="fw-bold mb-0">Marie Horwitz Horwitz</p>
+                  <p class="small text-muted">Hello, Are you there?</p>
+                </div>
+              </div>
+              <div class="pt-1 ml-4">
+                  <i style="color:green; cursor:pointer;" class="fas fa-user-plus"></i>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

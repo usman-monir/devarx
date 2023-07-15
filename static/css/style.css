@@ -6,6 +6,8 @@
 
 body {
 	color: rgb(35, 35, 35);
+	background-size: cover;
+	background-repeat: no-repeat;
 }
 
 .container {
@@ -158,7 +160,7 @@ body {
 	border-radius: 2px;
 	box-shadow: 0 3px 4px 0 rgba(0, 0, 0, .25);
 	display: block;
-	margin: 30px auto;
+	margin: 30px 0px;
 }
 
 .google-icon-wrapper {
@@ -236,13 +238,64 @@ body {
     border: solid 1px #BA68C8
 }
 .camera_icon{
-	position: relative;
-    top: 70px;
-    left: 60px;
+	display: block;
 	cursor:pointer;
+	margin-top: 20px;
 }
 .camera_icon:hover
 {
 	color: rgb(52, 99, 57);
 }
+.form
+{
+	width:300px;
+}
+.submit__btn
+{
+	width: 300px;
+	min-width: 200px;
+    padding: 10px;
+	color: inherit !important;
+	background-color:#5865F2 !important;
+	margin-top:15px;
+}
+
+.container__signup
+{
+	padding: 2rem 4rem;
+	max-width: 700px;
+    margin: 3rem auto;
+	color: whitesmoke;
+    background-color: rgba(0,0,0,.6);
+	backdrop-filter: blur(10px);
+}
+.legend
+{
+	padding:20px;
+}
+.parent_signup
+{
+	display:flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items:center;
+}
+.signup_content
+{
+	padding-left: 50px;
+    font-size: initial;
+	padding-left:90px;
+}
+.content_title
+{
+	color:inherit;
+	font-weight:800;
+	letter-spacing:3px;
+	margin-bottom:15px;
+}
+.paragraph
+{
+	color:darkgrey;
+}
+
 @import url(https://fonts.googleapis.com/css?family=Roboto:500);

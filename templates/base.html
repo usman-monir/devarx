@@ -13,11 +13,18 @@
       href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
     />
     <link
+    rel="stylesheet"
+     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+     crossorigin="anonymous"
+     referrerpolicy="no-referrer"
+     />
+    <!-- <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
       integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
       crossorigin="anonymous"
-    />
+    /> -->
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
       integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
@@ -28,9 +35,13 @@
       href="{{ url_for('static',  filename='css/chatbot.css')}}"
       rel="stylesheet"
     />
+    <link
+      href="{{ url_for('static',  filename='css/bootstrap.min.css')}}"
+      rel="stylesheet"
+    />
     <title>{{title}}</title>
   </head>
-  <body>
+  <body style= "{{(request.endpoint=='signup' or request.endpoint=='login') and "background-image:url('/static/images/login_image.png')" }}">
     {% for message in get_flashed_messages(with_categories=True) %}
     <p class="alert alert-{{message[0]}} m-0">{{ message[1] }}</p>
     {% endfor %}
@@ -75,14 +86,7 @@
     </div>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="{{ url_for('static', filename='js/chatbot.js')}}"></script>
-    <div class="container p-2">
-      <form action="/searchResult" method="get" class="d-flex col-5">
-        <input name="search" value="{{request.args.get('search') or ''}}"
-                class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-dark ml-3" type="submit">Search</button>
-    </form>
-    </div>
-    <div class="container">{% block content%}{% endblock %}</div>
+    {% block content%}{% endblock %}
   </body>
 
   <script>

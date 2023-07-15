@@ -121,7 +121,6 @@ class Users:
             sql = "SELECT * FROM Users where id=%s"
             args = (id)
             mydbCursor.execute(sql, args)
-            db.commit()
             rows = mydbCursor.fetchone()
             return rows
         except Exception as e:
@@ -130,6 +129,18 @@ class Users:
             if mydbCursor is not None:
                 mydbCursor.close()
 
+    def getAllUsers(self):
+        try:
+            mydbCursor = db.cursor()
+            sql = "SELECT * FROM Users"
+            mydbCursor.execute(sql)
+            rows = mydbCursor.fetchall()
+            return rows
+        except Exception as e:
+            print(str(e))
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
 
     # profile
     def saveProfile(self, id, name, email, profile_photo):
@@ -185,6 +196,20 @@ class Users:
             if mydbCursor is not None:
                 mydbCursor.close()
 
+
+    def getAllProfiles(self):
+        try:
+            mydbCursor = db.cursor()
+            sql = "select * from Profiles"
+            mydbCursor.execute(sql)
+            rows = mydbCursor.fetchall()
+            return rows
+        except Exception as e:
+            print(str(e))
+            return None
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
 
 
     def __AlreadySent__(self, sender_id, reciever_id):
@@ -510,18 +535,19 @@ class Users:
 
 
     def changeDp(self, id, filename):
-            try:
-                mydbCursor = db.cursor()
-                path = "images/"+filename
-                query="update profiles set profile_photo=%s where id=%s"
-                args=(path,id)
-
-                mydbCursor.execute(query,args)
-                self.connection.commit()
-                return True
-            except Exception as e:
-                print(str(e))
-                return False
-            finally:
-                if mydbCursor is not None:
-                    mydbCursor.close()
+        try:
+            mydbCursor = db.cursor()
+            path = "/static/images/"+filename
+            print(path)
+            sql="update profiles set profile_photo=%s where id=%s"
+            args=(path,id)
+            mydbCursor.execute(sql,args)
+            print(mydbCursor.fetchone())
+            db.commit()
+        except Exception as e:
+            print("error",str(e))
+            return False
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
+                return path

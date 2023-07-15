@@ -1,6 +1,6 @@
 from app import socketIO, openai, app, mail
 from models import Users
-from flask import render_template, url_for, redirect, flash, session, request
+from flask import render_template, url_for, redirect, flash, session, request, jsonify
 from forms import SignupForm, LoginForm, ResetRequestForm, ResetPasswordForm, GroupForm
 from flask_socketio import join_room, leave_room
 from flask_mail import Message
@@ -29,7 +29,7 @@ flow = Flow.from_client_secrets_file(
 app.config["SECRET_KEY"] = config.props["SECRET_KEY"]
 
 
-# utility method to generate chatgpt response
+# utility methods
 def generateChatResponse(prompt):
     messages = []
     question = {}
@@ -44,6 +44,102 @@ def generateChatResponse(prompt):
         return answer
     except Exception as e:
         return str(e)
+
+
+def getProfileData():
+    usersHandler = Users()
+    res = usersHandler.getProfile(session.get("id"))
+    if res is None:
+        return res
+    return {
+            "id": res[0],
+            "username": res[1] or '',
+            "email": res[2] or '',
+            "firstname": res[3] or '',
+            "lastname": res[4] or '',
+            "about": res[5] or '',
+            "phone_number": res[6] or '',
+            "address": res[7]or '',
+            "education": res[8] or '',
+            "institution": res[9]or '',
+            "interests": res[10]or '',
+            "country": res[11]or '',
+            "state": res[12]or '',
+            "experience": res[13] or '',
+            "additional_details": res[14] or '',
+            "profile_photo": res[15] or '',
+            "cover_photo": res[16] or ''
+    }
+
+def getAllProfilesData():
+    usersHandler = Users()
+    profiles = usersHandler.getAllProfiles()
+    if profiles is None:
+        return profiles
+    print(profiles)
+    data = []
+    for profile in profiles:
+            if profile[0] != session.get("id"):
+                data.append({
+                "id": profile[0],
+                "username": profile[1] or '',
+                "email": profile[2] or '',
+                "firstname": profile[3] or '',
+                "lastname": profile[4] or '',
+                "about": profile[5] or '',
+                "phone_number": profile[6] or '',
+                "address": profile[7]or '',
+                "education": profile[8] or '',
+                "institution": profile[9]or '',
+                "interests": profile[10]or '',
+                "country": profile[11]or '',
+                "state": profile[12]or '',
+                "experience": profile[13] or '',
+                "additional_details": profile[14] or '',
+                "profile_photo": profile[15] or '',
+                "cover_photo": profile[16] or ''
+                })
+    return data
+
+
+def getAllConnectionIds():
+    usersHandler = Users()
+    id = session.get("id")
+    connectionIds = []
+    # getting all the friends
+    connections = usersHandler.getConnections(id)
+    for connection in connections:
+        # check which one is not user himself and then append to the array
+        if int(id) == connection[1]:
+            connectionIds.append(connection[2])
+        else:
+            connectionIds.append(connection[1])
+    return connectionIds
+
+
+def getAllConnections():
+    usersHandler = Users()
+    id = session.get("id")
+    connections = []
+        # getting all the friends
+    connectionsIds = usersHandler.getConnections(id)
+    for connection in connectionsIds:
+        # check which one is not user himself and then append to the array
+        if int(id) == connection[1]:
+            connections.append(usersHandler.getUserData(connection[2]))
+        else:
+            connections.append(usersHandler.getUserData(connection[1]))
+    return connections
+
+
+def getAllGroups():
+    usersHandler = Users()
+    allGroups = []
+    # getting all the groups
+    groups = usersHandler.getAllGroups()
+    for group in groups:
+       allGroups.append(group)
+    return allGroups
 
 
 # routes
@@ -203,7 +299,7 @@ def homepage():
     if request.args.get('mssg') and request.args.get('type'):
         flash(request.args.get('mssg'), request.args.get('type'))
 
-    return render_template("homepage.html", profileData = getProfileData(), title= "Home")
+    return render_template("homepage.html", profileData = getProfileData(), allProfilesData = getAllProfilesData(), title= "Home")
 
 
 @app.route("/editProfile", methods=["GET","POST"])
@@ -217,9 +313,39 @@ def editProfile():
     if request.method == "POST":
         for key in request.form:
             profileData[key] = request.form.get(key)
+        print(profileData)
+        prev_path = profileData.get('profile_photo')
+        if 'dp_file' in request.files:
+            path = uploadDp(request.files.get("dp_file"))
+        profileData['profile_photo'] = path or prev_path
         res = usersHandler.updateProfile(profileData)
         return redirect(url_for("homepage", mssg=res[0], type=res[1]))
     return render_template("editProfile.html", profileData=profileData)
+
+
+def uploadDp(dp_file):
+    if "id" in session:
+        if not dp_file:
+            return None
+        print("file: ", dp_file)
+        # if user does not select file or submit a empty part without filename
+        if dp_file.filename == '':
+            flash('No selected file', 'warning')
+            return None
+
+        if dp_file:
+            usersHandler = Users()
+            prev = usersHandler.getDp(session.get("id"))[0]
+            print("prev: ",prev)
+            prev = prev.split("/")[-1]
+            print("pr   ev", prev)
+
+            filename = str(session.get("id")) + "-dp." + dp_file.filename.split(".")[-1]
+            print('filename:', filename)
+            dp_file.save(os.path.join(config.props.get('UPLOAD_FOLDER'), filename))
+            path = usersHandler.changeDp(session.get("id"),filename)
+            return path
+
 
 
 @app.route("/createGroup", methods=["GET","POST"])
@@ -238,86 +364,17 @@ def createGroup():
 def getSearchResults():
     if "id" in session:
         username = str(request.args["search"])
-        usersData = []
+        allProfilesData = []
         id = session.get("id")
-        usersHandler = Users()
-        users = usersHandler.getUserNames()
 
         # getting all the users except self
-        for user in users:
-            if user[0] != id and (username.lower() in user[1].lower() or username.lower() in user[2].lower()):
-                usersData.append(user)
-
-        return render_template("searchUsers.html", users=usersData, connections=getAllConnectionIds(), search=username, title="Add Connections")
+        for user in getAllProfilesData():
+            if (username.lower() in user.get('username').lower() or username.lower() in user.get("email").lower() or username.lower() in user.get('firstname') or username.lower() in user.get('lastname')):
+                allProfilesData.append(user)
+        return render_template("homepage.html", profileData = getProfileData(), allProfilesData = allProfilesData, title="Home")
     else:
         flash("Something went wrong!", "warning")
         return redirect('/')
-
-
-def getProfileData():
-    usersHandler = Users()
-    res = usersHandler.getProfile(session.get("id"))
-    if res is None:
-        return res
-    return {
-            "id": res[0],
-            "username": res[1] or '',
-            "email": res[2] or '',
-            "firstname": res[3] or '',
-            "lastname": res[4] or '',
-            "about": res[5] or '',
-            "phone_number": res[6] or '',
-            "address": res[7]or '',
-            "education": res[8] or '',
-            "institution": res[9]or '',
-            "interests": res[10]or '',
-            "country": res[11]or '',
-            "state": res[12]or '',
-            "experience": res[13] or '',
-            "additional_details": res[14] or '',
-            "profile_photo": res[15] or '',
-            "cover_photo": res[16] or ''
-    }
-
-
-def getAllConnectionIds():
-    usersHandler = Users()
-    id = session.get("id")
-    connectionIds = []
-    # getting all the friends
-    connections = usersHandler.getConnections(id)
-    for connection in connections:
-        # check which one is not user himself and then append to the array
-        if int(id) == connection[1]:
-            connectionIds.append(connection[2])
-        else:
-            connectionIds.append(connection[1])
-    return connectionIds
-
-
-def getAllConnections():
-    usersHandler = Users()
-    id = session.get("id")
-    connections = []
-        # getting all the friends
-    connectionsIds = usersHandler.getConnections(id)
-    for connection in connectionsIds:
-        # check which one is not user himself and then append to the array
-        if int(id) == connection[1]:
-            connections.append(usersHandler.getUserData(connection[2]))
-        else:
-            connections.append(usersHandler.getUserData(connection[1]))
-    return connections
-
-
-def getAllGroups():
-    usersHandler = Users()
-    allGroups = []
-    # getting all the groups
-    groups = usersHandler.getAllGroups()
-    for group in groups:
-       allGroups.append(group)
-    return allGroups
 
 
 @app.route("/friendRequest", methods=["GET","POST"])
@@ -328,7 +385,7 @@ def sendFriendRequest():
         usersHandler = Users()
         res = usersHandler.addToPending(session.get("id"), friend_id)
         flash(res[0], res[1])
-        return render_template("homepage.html", form=form, title="Home")
+        return render_template("homepage.html", profileData =getProfileData(), form=form, title="Home")
     else:
         flash("Something went wrong!", "warning")
         return redirect('/')
@@ -385,11 +442,11 @@ def handleAcceptOrRejectRequest():
             res = usersHandler.addConnection(session.get("id"), friend_id)
             flash(res[0], res[1])
 
-        return redirect('/')
+        return render_template('homepage.html', profileData= getProfileData(), title='Home')
 
     else:
         flash("Something went wrong!", "warning")
-        return redirect('/')
+        return render_template('homepage.html', profileData= getProfileData(), title='Home')
 
 
 @app.route('/chat', methods=["POST","GET"])
@@ -432,65 +489,64 @@ def room():
         return render_template("room.html", title="Room: " + room_id, myData=myData, groupData=groupData, prevChat=chat, connections=getAllConnections(),groups=getAllGroups())
     return redirect('/')
 
-@app.route("/uploadDp", methods=["GET","POST"])
-def uploadDp():
+
+@app.route('/videoCall')
+def videoCall():
     if "id" in session:
-        if request.method == 'POST':
-            # check if the post request has the file part
-            print(request.files)
-            if 'dp_file' not in request.files:
-                flash('No file part', 'danger')
-                return redirect('/')
-            file = request.files['dp_file']
-            # if user does not select file or submit a empty part without filename
-            if file.filename == '':
-                flash('No selected file', 'warning')
-                return redirect(request.url)
+        return render_template('videoCall.html', title="Video Call")
+    return redirect('/')
 
-            if file:
-                usersHandler = Users()
-                prev = usersHandler.getDp(session.get("id"))[0]
-                prev = prev.split("/")[-1]
 
-                if prev != "'https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg'":
-                    os.remove(os.path.join(config.props.get("UPLOAD_FOLDER"), prev))
+@app.route('/test')
+def test():
+    return render_template('test.html', title="Test template")
 
-                filename = str(session.get("id")) + "-dp." + file.filename.split(".")[-1]
-                file.save(os.path.join(config.props.get('UPLOAD_FOLDER'), filename))
-                usersHandler.changeDp(session.get("id"),filename)
 
-        return redirect('/editProfile')
-    else:
-        return redirect('/')
+@app.route('/usersTable')
+def usersTable():
+    if "id" in session:
+        usersHandler = Users()
+        users = usersHandler.getAllUsers()
+        data = []
+        for user in users:
+            data.append({"id":user[0], "username": user[1], "email": user[2]})
+        return jsonify(data)
+
+
+@app.route('/users')
+def showUsersTable():
+    if "id" in session:
+        return render_template('usersTable.html', title='Users Table')
+    return redirect('/')
 
 
 # socket methods
 
-@socketIO.on("connect")
-def connect():
-    if "id" in session:
-        room_id = session.get("room_id")
-        id = session.get("id")
-        name = session.get("name")
-        if room_id is None or id is None:
-            print("Cannot connect with socketIO")
-            return
+# @socketIO.on("connect")
+# def connect():
+#     if "id" in session:
+#         room_id = session.get("room_id")
+#         id = session.get("id")
+#         name = session.get("name")
+#         if id is None:
+#             print("Cannot connect with socketIO")
+#             return
+#         if room_id:
+#             join_room(room_id)
+#             socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+#             print(f"{name} has joined the room-{room_id}")
+#         else:
+#             flash("Cannot connect cz user is not login!", "danger")
 
-        join_room(room_id)
-        socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
-        print(f"{name} has joined the room-{room_id}")
-    else:
-        flash("Cannot connect cz user is not login!", "danger")
-
-@socketIO.on("disconnect")
-def disconnect():
-    room_id = session.get("room_id")
-    name = session.get("name")
-    leave_room(room_id)
-
-    socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
-    print(f"{name} has left the room-{room_id}")
-    redirect('/')
+# @socketIO.on("disconnect")
+# def disconnect():
+#     room_id = session.get("room_id")
+#     name = session.get("name")
+#     if room_id:
+#         leave_room(room_id)
+#         socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+#         print(f"{name} has left the room-{room_id}")
+#     redirect('/')
 
 
 @socketIO.on("join_private_room")

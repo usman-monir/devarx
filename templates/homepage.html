@@ -41,9 +41,9 @@
           </div>
         </div>
         <!-- end profile -->
-        <div class="profile-body">
+        <div class="profile-body my-5">
           <!-- left wrapper start -->
-          <div class="card rounded my-5 about-me">
+          <div class="card rounded about-me">
             <div class="card-body">
               <h3 class="text-center my-2">About Me</h3>
               <p>{{profileData.about or 'Not Added yet'}}</p>
@@ -194,28 +194,92 @@
               </div>
             </div>
           </div>
+          <div class="card rounded">
+            <div class="card-body p-3">
+              <h4 class="text-center mt-0">DEVS U May Know</h4>
+              <form
+                action="/searchResult"
+                method="get"
+                class="input-group rounded mb-3"
+              >
+                <input
+                  name="search"
+                  value="{{request.args.get('search') or ''}}"
+                  class="form-control search_form rounded"
+                  type="search"
+                  placeholder="Search"
+                  aria-label="Search"
+                  aria-describedby="search-addon"
+                />
+                <button
+                  type="submit"
+                  class="input-group-text border-0"
+                  id="search-addon"
+                >
+                  <i class="fas fa-search"></i>
+                </button>
+              </form>
+
+              <div class="people_list">
+                <ul class="list-unstyled mb-0">
+                  {% for user in allProfilesData %}
+                  <li class="py-3 px-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                      <div class="d-flex flex-row">
+                        <div>
+                          <img
+                            src="{{user.profile_photo}}"
+                            alt="avatar"
+                            class="d-flex align-self-center me-3"
+                            width="60"
+                          />
+                        </div>
+                        <div class="pt-1 px-3">
+                          <p class="fw-bold mb-0">{{(user.firstname + " " + user.lastname) or user.username}}</p>
+                          <p class="small text-muted">{{user.about}}</p>
+                        </div>
+                      </div>
+                      <div class="pt-1 ml-4">
+                        <a  href="{{url_for('sendFriendRequest', id=user.id)}}">
+                          <input name="id" value="{{ user[0] }}" style="display:none"/>
+                          <i style="color:green; cursor:pointer;" class="fas fa-user-plus"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+                  {% endfor %}
+                  {% if allProfilesData|length == 0%}
+                    <div class="d-flex justify-content-between m-5">
+                        <p class="text-muted">No Users Found!</p>
+                    </div>
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <!-- left wrapper end -->
-          <!-- begin profile-content -->
-          <div class="profile-content">
-            <!-- begin tab-content -->
-            <div class="tab-content p-0">
-              <!-- begin #profile-post tab -->
+         <!-- begin profile-content
+           <div class="profile-content">
+              begin tab-content
+           <div class="tab-content p-0">
+              begin #profile-post tab
               <div class="tab-pane fade active show" id="profile-post">
-                <!-- begin timeline -->
+                begin timeline
                 <ul class="timeline">
                   <li>
-                    <!-- begin timeline-time -->
+                     begin timeline-time
                     <div class="timeline-time">
                       <span class="date">today</span>
                       <span class="time">04:20</span>
                     </div>
-                    <!-- end timeline-time -->
-                    <!-- begin timeline-icon -->
+                    end timeline-time
+                     begin timeline-icon
                     <div class="timeline-icon">
                       <a href="javascript:;">&nbsp;</a>
                     </div>
-                    <!-- end timeline-icon -->
-                    <!-- begin timeline-body -->
+                    end timeline-icon
+                    begin timeline-body
                     <div class="timeline-body">
                       <div class="timeline-header">
                         <span class="userimage"
@@ -306,21 +370,21 @@
                         </div>
                       </div>
                     </div>
-                    <!-- end timeline-body -->
+                    end timeline-body
                   </li>
                   <li>
-                    <!-- begin timeline-time -->
+                     begin timeline-time
                     <div class="timeline-time">
                       <span class="date">yesterday</span>
                       <span class="time">20:17</span>
                     </div>
-                    <!-- end timeline-time -->
-                    <!-- begin timeline-icon -->
+                    end timeline-time
+                     begin timeline-icon
                     <div class="timeline-icon">
                       <a href="javascript:;">&nbsp;</a>
                     </div>
-                    <!-- end timeline-icon -->
-                    <!-- begin timeline-body -->
+                     end timeline-icon
+                    begin timeline-body
                     <div class="timeline-body">
                       <div class="timeline-header">
                         <span class="userimage"
@@ -355,21 +419,21 @@
                         >
                       </div>
                     </div>
-                    <!-- end timeline-body -->
+                     end timeline-body
                   </li>
                   <li>
-                    <!-- begin timeline-time -->
+                    begin timeline-time
                     <div class="timeline-time">
                       <span class="date">24 February 2014</span>
                       <span class="time">08:17</span>
                     </div>
-                    <!-- end timeline-time -->
-                    <!-- begin timeline-icon -->
+                    end timeline-time
+                    begin timeline-icon
                     <div class="timeline-icon">
                       <a href="javascript:;">&nbsp;</a>
                     </div>
-                    <!-- end timeline-icon -->
-                    <!-- begin timeline-body -->
+                    end timeline-icon
+                    begin timeline-body
                     <div class="timeline-body">
                       <div class="timeline-header">
                         <span class="userimage"
@@ -412,21 +476,21 @@
                         >
                       </div>
                     </div>
-                    <!-- end timeline-body -->
+                     end timeline-body
                   </li>
                   <li>
-                    <!-- begin timeline-time -->
+                    begin timeline-time
                     <div class="timeline-time">
                       <span class="date">10 January 2014</span>
                       <span class="time">20:43</span>
                     </div>
-                    <!-- end timeline-time -->
-                    <!-- begin timeline-icon -->
+                    end timeline-time
+                    begin timeline-icon
                     <div class="timeline-icon">
                       <a href="javascript:;">&nbsp;</a>
                     </div>
-                    <!-- end timeline-icon -->
-                    <!-- begin timeline-body -->
+                     end timeline-icon
+                    begin timeline-body
                     <div class="timeline-body">
                       <div class="timeline-header">
                         <span class="userimage"
@@ -452,7 +516,7 @@
                         </p>
                         <p class="m-t-20">
                           <img
-                            src="../assets/img/gallery/gallery-5.jpg"
+                            src=""
                             alt=""
                           />
                         </p>
@@ -478,22 +542,22 @@
                         >
                       </div>
                     </div>
-                    <!-- end timeline-body -->
+                    end timeline-body
                   </li>
                   <li>
-                    <!-- begin timeline-icon -->
+                     begin timeline-icon
                     <div class="timeline-icon">
                       <a href="javascript:;">&nbsp;</a>
                     </div>
-                    <!-- end timeline-icon -->
+                    end timeline-icon
                   </li>
                 </ul>
-                <!-- end timeline -->
+                 end timeline
               </div>
-              <!-- end #profile-post tab -->
+              end #profile-post tab
             </div>
-            <!-- end tab-content -->
-          </div>
+            end tab-content
+          </div> -->
           <!-- end profile-content -->
         </div>
       </div>
