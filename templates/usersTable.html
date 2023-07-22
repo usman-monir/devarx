@@ -35,26 +35,6 @@
     ></script>
   </head>
   <body>
-    <button id="showUsers">Show Users</button>
-    <table id="show" border="2"></table>
-
-    <script>
-        let data;
-      $(document.body).on("click", "#showUsers", function (e) {
-        $.ajax({
-            type:"GET",
-            url:'/usersTable',
-            success: function(res){
-                data = res;
-                console.log(data)
-                const table = $("#show").DataTable({
-                    data: (data),
-                    destroy: true,
-                    columns: [{ data: "id" }, { data: "username" }, { data: "email" }],
-                  });
-            }
-        })
-      });
-    </script>
   </body>
+  <script src="{{url_for('static', filename='js/dataTable.js')}}"></script>
 </html>

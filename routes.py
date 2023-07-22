@@ -28,7 +28,6 @@ flow = Flow.from_client_secrets_file(
 
 app.config["SECRET_KEY"] = config.props["SECRET_KEY"]
 
-
 # utility methods
 def generateChatResponse(prompt):
     messages = []
@@ -189,6 +188,10 @@ def callback():
         print("SECURITY CHECK: " + str(e), "danger")
     return redirect(url_for("login"))
 
+
+@app.route('/loading')
+def loading():
+    return render_template('loading.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -508,10 +511,11 @@ def usersTable():
         usersHandler = Users()
         users = usersHandler.getAllUsers()
         data = []
+        print(users)
         for user in users:
             data.append({"id":user[0], "username": user[1], "email": user[2]})
         return jsonify(data)
-
+    return redirect('/')
 
 @app.route('/users')
 def showUsersTable():
@@ -522,31 +526,31 @@ def showUsersTable():
 
 # socket methods
 
-# @socketIO.on("connect")
-# def connect():
-#     if "id" in session:
-#         room_id = session.get("room_id")
-#         id = session.get("id")
-#         name = session.get("name")
-#         if id is None:
-#             print("Cannot connect with socketIO")
-#             return
-#         if room_id:
-#             join_room(room_id)
-#             socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
-#             print(f"{name} has joined the room-{room_id}")
-#         else:
-#             flash("Cannot connect cz user is not login!", "danger")
+@socketIO.on("connect")
+def connect():
+    if "id" in session:
+        room_id = session.get("room_id")
+        id = session.get("id")
+        name = session.get("name")
+        if id is None:
+            print("Cannot connect with socketIO")
+            return
+        if room_id:
+            join_room(room_id)
+            socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+            print(f"{name} has joined the room-{room_id}")
+        else:
+            flash("Cannot connect cz user is not login!", "danger")
 
-# @socketIO.on("disconnect")
-# def disconnect():
-#     room_id = session.get("room_id")
-#     name = session.get("name")
-#     if room_id:
-#         leave_room(room_id)
-#         socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
-#         print(f"{name} has left the room-{room_id}")
-#     redirect('/')
+@socketIO.on("disconnect")
+def disconnect():
+    room_id = session.get("room_id")
+    name = session.get("name")
+    if room_id:
+        leave_room(room_id)
+        socketIO.emit( "joinOrLeave", {"name": name, "message": " online "}, to=room_id)
+        print(f"{name} has left the room-{room_id}")
+    redirect('/')
 
 
 @socketIO.on("join_private_room")

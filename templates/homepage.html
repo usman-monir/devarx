@@ -216,7 +216,7 @@
                   class="input-group-text border-0"
                   id="search-addon"
                 >
-                  <i class="fas fa-search"></i>
+                  <i class="fa fa-search"></i>
                 </button>
               </form>
 
@@ -242,7 +242,7 @@
                       <div class="pt-1 ml-4">
                         <a  href="{{url_for('sendFriendRequest', id=user.id)}}">
                           <input name="id" value="{{ user[0] }}" style="display:none"/>
-                          <i style="color:green; cursor:pointer;" class="fas fa-user-plus"></i>
+                          <i style="color:green; cursor:pointer;" class="fa fa-user-plus"></i>
                         </a>
                       </div>
                     </div>
@@ -564,4 +564,43 @@
     </div>
   </div>
 </div>
+<div id="loading-div" class="loading-div">
+
+<div class="loading-svg">
+
+  <svg version="1.1" id="L4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+  viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
+  <circle fill="#fff" stroke="none" cx="6" cy="50" r="6">
+    <animate
+      attributeName="opacity"
+      dur="1s"
+      values="0;1;0"
+      repeatCount="indefinite"
+      begin="0.1"/>
+  </circle>
+  <circle fill="#fff" stroke="none" cx="26" cy="50" r="6">
+    <animate
+      attributeName="opacity"
+      dur="1s"
+      values="0;1;0"
+      repeatCount="indefinite"
+      begin="0.2"/>
+  </circle>
+  <circle fill="#fff" stroke="none" cx="46" cy="50" r="6">
+    <animate
+      attributeName="opacity"
+      dur="1s"
+      values="0;1;0"
+      repeatCount="indefinite"
+      begin="0.3"/>
+  </circle>
+</svg>
+</div>
+</div>
+<script>
+  setTimeout(()=>{
+    document.getElementById('loading-div').style.display = 'None';
+  },1500)
+</script>
 {% endblock %}
+

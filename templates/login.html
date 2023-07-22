@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content%}
      <div class="container__signup">
+      <div class="form_container">
     <div class="parent_signup">
     <form class="form" method="post" action="/login">
     {{ form.hidden_tag() }}
@@ -13,7 +14,6 @@
         <span>{{ error }}</span>
         {% endfor %} {% else %} {{ form.email(class="form-control") }} {% endif %}
         </div>
-
         <div class="form-group">
         {{ form.password.label(class="form-control-label") }} {% if
         form.password.errors %} {{ form.password(class="form-control
@@ -44,5 +44,6 @@
         <p class="paragraph">Unlock the Power of Technology with DevArx<br> Your Trusted Partner in Software Development Excellence</p>
     </div>
     </div>
+  </div>
     </div>
 {% endblock %}
