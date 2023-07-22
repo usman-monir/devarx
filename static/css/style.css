@@ -260,12 +260,15 @@ body {
 	margin-top:15px;
 }
 
-.container__signup
+.container_bg
 {
-	max-width: 700px;
-    margin: 7rem auto;
-	margin-bottom: 0;
 	min-height: 100vh;
+	background-image: url(/static/images/login_image.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .form_container
 {
@@ -287,9 +290,8 @@ body {
 }
 .signup_content
 {
-	padding-left: 50px;
     font-size: initial;
-	padding-left:90px;
+	padding-left:80px;
 }
 .content_title
 {
@@ -301,6 +303,7 @@ body {
 .paragraph
 {
 	color:darkgrey;
+	max-width: 370px;
 }
 .loading-div
 {

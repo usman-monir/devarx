@@ -32,7 +32,7 @@
     />
     <title>{{title}}</title>
   </head>
-  <body style= "{{(request.endpoint=='signup' or request.endpoint=='login' or request.endpoint=='reset_request' or request.endpoint=='reset_with_token') and "background-image:url('/static/images/login_image.png')" }}">
+  <body>
     {% for message in get_flashed_messages(with_categories=True) %}
     <p class="alert alert-{{message[0]}} m-0">{{ message[1] }}</p>
     {% endfor %}

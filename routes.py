@@ -189,10 +189,6 @@ def callback():
     return redirect(url_for("login"))
 
 
-@app.route('/loading')
-def loading():
-    return render_template('loading.html')
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     session.clear()
@@ -304,6 +300,10 @@ def homepage():
 
     return render_template("homepage.html", profileData = getProfileData(), allProfilesData = getAllProfilesData(), title= "Home")
 
+
+@app.route("/devarx")
+def devarxLandingPage():
+    return render_template("devarxLandingPage.html")
 
 @app.route("/editProfile", methods=["GET","POST"])
 def editProfile():
