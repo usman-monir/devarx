@@ -45,9 +45,9 @@ def generateChatResponse(prompt):
         return str(e)
 
 
-def getProfileData():
+def getProfileData(id):
     usersHandler = Users()
-    res = usersHandler.getProfile(session.get("id"))
+    res = usersHandler.getProfile(id)
     if res is None:
         return res
     return {
@@ -193,6 +193,8 @@ def callback():
 def signup():
     session.clear()
     form = SignupForm()
+    if request.args.get('mssg') and request.args.get('type'):
+        flash(request.args.get('mssg'), request.args.get('type'))
     if request.method == "POST":
         username = form.username.data
         email = form.email.data
@@ -297,20 +299,32 @@ def homepage():
         session.pop("logged_in")
     if request.args.get('mssg') and request.args.get('type'):
         flash(request.args.get('mssg'), request.args.get('type'))
-
-    return render_template("homepage.html", profileData = getProfileData(), allProfilesData = getAllProfilesData(), title= "Home")
+    id = session.get("id")
+    return render_template("homepage.html", profileData = getProfileData(id), allProfilesData = getAllProfilesData(), title= "Home")
 
 
 @app.route("/devarx")
 def devarxLandingPage():
     return render_template("devarxLandingPage.html")
 
+
+@app.route("/about_us")
+def devarxAboutPage():
+    return render_template("devarxAboutPage.html")
+
+
+@app.route("/faq")
+def devarxFaqPage():
+    return render_template("faq.html")
+
+
 @app.route("/editProfile", methods=["GET","POST"])
 def editProfile():
     if session.get("email") is None or session.get("name") is None:
         return redirect(url_for("login"))
     usersHandler = Users()
-    profileData = getProfileData()
+    id = session.get("id")
+    profileData = getProfileData(id)
     if profileData is None:
         return redirect('/')
     if request.method == "POST":
@@ -324,6 +338,39 @@ def editProfile():
         res = usersHandler.updateProfile(profileData)
         return redirect(url_for("homepage", mssg=res[0], type=res[1]))
     return render_template("editProfile.html", profileData=profileData)
+
+
+@app.route("/deleteProfile", methods=["GET","POST"])
+def deleteProfile():
+    if "id" in session:
+        usersHandler = Users()
+        res = usersHandler.deleteProfile(session.get("id"))
+        if res[0]:
+            return redirect(url_for('signup', mssg=res[1], type=res[2]))
+        else:
+            return redirect(url_for('profile', id=session.get("id"), mssg=res[1], type=res[2]))
+    return redirect("/")
+
+
+@app.route("/unFriend/<id>", methods=["GET", "POST"])
+def unFriend(id):
+    if "id" in session:
+        usersHandler = Users()
+        res = usersHandler.removeConnection(session.get("id"), id)
+        if res[0]:
+            return redirect(url_for('profile', id=id, mssg=res[1], type=res[2]))
+        else:
+            return redirect(url_for('profile', id=id, mssg=res[1], type=res[2]))
+    return redirect('/')
+
+@app.route("/profile/<id>")
+def profile(id):
+    if "id" in session:
+        if request.args.get('mssg') and request.args.get('type'):
+            flash(request.args.get('mssg'), request.args.get('type'))
+        connections = getAllConnectionIds()
+        return render_template("profile.html",profileData = getProfileData(id), isFriend= int(id) in connections)
+    return redirect('/')
 
 
 def uploadDp(dp_file):
@@ -369,12 +416,13 @@ def getSearchResults():
         username = str(request.args["search"])
         allProfilesData = []
         id = session.get("id")
+        connections = getAllConnectionIds()
 
         # getting all the users except self
         for user in getAllProfilesData():
-            if (username.lower() in user.get('username').lower() or username.lower() in user.get("email").lower() or username.lower() in user.get('firstname') or username.lower() in user.get('lastname')):
+            if (username.lower() in user.get('username').lower() or username.lower() in user.get("email").lower() or username.lower() in user.get('firstname') or username.lower() in user.get('lastname')) and (id not in connections):
                 allProfilesData.append(user)
-        return render_template("homepage.html", profileData = getProfileData(), allProfilesData = allProfilesData, title="Home")
+        return render_template("homepage.html", profileData = getProfileData(id), allProfilesData = allProfilesData, title="Home")
     else:
         flash("Something went wrong!", "warning")
         return redirect('/')
@@ -383,12 +431,13 @@ def getSearchResults():
 @app.route("/friendRequest", methods=["GET","POST"])
 def sendFriendRequest():
     if "id" in session:
+        id = session.get("id")
         form = GroupForm()
         friend_id = int(request.args["id"])
         usersHandler = Users()
         res = usersHandler.addToPending(session.get("id"), friend_id)
         flash(res[0], res[1])
-        return render_template("homepage.html", profileData =getProfileData(), form=form, title="Home")
+        return render_template("homepage.html", profileData =getProfileData(id), form=form, title="Home")
     else:
         flash("Something went wrong!", "warning")
         return redirect('/')
@@ -428,7 +477,6 @@ def notifications():
 @app.route("/acceptOrRejectRequest", methods=["GET","POST"])
 def handleAcceptOrRejectRequest():
     if "id" in session:
-
         friend_id = request.form.get("id")
         accept = False
         try:
@@ -437,29 +485,29 @@ def handleAcceptOrRejectRequest():
         except:
             if request.form.get("reject"):
                 accept = False
-
+        id =  session.get("id")
         usersHandler = Users()
-        usersHandler.clearFromPending(friend_id, session.get("id"))
+        usersHandler.clearFromPending(friend_id,id)
 
         if accept:
-            res = usersHandler.addConnection(session.get("id"), friend_id)
+            res = usersHandler.addConnection(id, friend_id)
             flash(res[0], res[1])
 
-        return render_template('homepage.html', profileData= getProfileData(), title='Home')
+        return render_template('homepage.html', profileData= getProfileData(id), title='Home')
 
     else:
         flash("Something went wrong!", "warning")
-        return render_template('homepage.html', profileData= getProfileData(), title='Home')
+        return render_template('homepage.html', profileData= getProfileData(session.get("id")), title='Home')
 
 
 @app.route('/chat', methods=["POST","GET"])
-def startChat():
+def chat():
     if "id" in session:
         usersHandler = Users()
         id = session.get("id")
         myData = usersHandler.getUserData(id)
         if request.method == "GET":
-            return render_template('chat.html', profileData=getProfileData(), room_id=0, myData=None, friendData=None, groups=getAllGroups(), connections=getAllConnections(), title="Chat")
+            return render_template('chat.html', profileData=getProfileData(id), room_id=0, myData=None, friendData=None, groups=getAllGroups(), connections=getAllConnections(), title="Chat")
         friend_id = int(request.form.get("id"))
         friendData = usersHandler.getUserData(friend_id)
         room_id = usersHandler.getRoomId(id,friend_id)[0]
@@ -468,7 +516,7 @@ def startChat():
         if prevChat is not None:
             for data in prevChat:
                 chat.append(data)
-        return render_template('chat.html', profileData=getProfileData(), myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
+        return render_template('chat.html', profileData=getProfileData(id), myData=myData, friendData=friendData, room_id=room_id, prevChat=chat, groups=getAllGroups(), connections=getAllConnections(), title="Room - " + str(room_id) )
     else:
         return redirect('/')
 

@@ -1,0 +1,114 @@
+<link rel="stylesheet" href="{{url_for('static', filename='css/profile.css')}}">
+{% extends "base.html"%}
+{% block content %}
+    <div class="container py-5">
+      <div class="row d-flex justify-content-center align-items-center">
+        <div class="col col-lg mb-4 mb-lg-0">
+          <div class="card mb-3" style="border-radius: .5rem;">
+            <div class="row g-0">
+              <div class="col-md-4 gradient-custom text-center text-white"
+                style="border-top-left-radius: .5rem; border-bottom-left-radius: .5rem;">
+                <img src="{{profileData.profile_photo}}"
+                  alt="Avatar" class="img-fluid my-5" style="width: 80px;" />
+                <h5>{{(profileData.firstname + " " + profileData.lastname) or profileData.username}}</h5>
+                <p class="white-color">{{profileData.about}}</p>
+                {% if profileData.id == session.get("id")%}
+                <div>
+                  <a
+                  href="{{url_for('editProfile')}}"
+                  class="btn btn-info mb-2"
+                  >Edit Profile</a
+                  >
+                </div>
+                <div>
+                  <a
+                  href="{{url_for('deleteProfile')}}"
+                  class="btn btn-danger mb-2"
+                  >Deactivate</a
+                  >
+                </div>
+
+                {% elif isFriend %}
+                <div>
+                  <form action="/chat" method="POST">
+                    <button type="submit" class="btn btn-success mb-2" name="id" value="{{profileData.id}}" >
+                  Start Chat</button>
+                  </form>
+                </div>
+                <div>
+                  <a
+                  href="{{url_for('unFriend', id=profileData.id)}}"
+                  class="btn btn-danger mb-2"
+                  >UnFriend</a
+                  >
+                </div>
+                {% else %}
+                <div>
+                  <a  href="{{url_for('sendFriendRequest', id=profileData.id)}}" class="btn btn-sm btn-info mb-2">Send Friend Request
+                    <input name="id" value="{{ profileData.id }}" hidden>
+                  </a>
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-md-8">
+                <div class="card-body p-4">
+                  <h6 class="heading">Personal Information</h6>
+                  <hr class="mt-0 mb-4">
+                  <div class="row pt-1">
+                    <div class="col-6 mb-3">
+                      <h6>Email</h6>
+                      <p class="text-muted">{{profileData.email}}</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                      <h6>Phone</h6>
+                      <p class="text-muted">{{profileData.phone_number}}</p>
+                    </div>
+                  </div>
+                  <h6 class="heading">Residence</h6>
+                  <hr class="mt-0 mb-4">
+                  <div class="row pt-1">
+                    <div class="col-12 mb-3">
+                      <h6>Lives</h6>
+                      <p class="text-muted">{{profileData.address}}</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                      <h6>State</h6>
+                      <p class="text-muted">{{profileData.state}}</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                      <h6>Country</h6>
+                      <p class="text-muted">{{profileData.country}}</p>
+                    </div>
+                  </div>
+                  <h6 class="heading">Education</h6>
+                  <hr class="mt-0 mb-4">
+                  <div class="row pt-1">
+                    <div class="col-6 mb-3">
+                      <h6>Degree</h6>
+                      <p class="text-muted">{{profileData.education}}</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                      <h6>Institute</h6>
+                      <p class="text-muted">{{profileData.institution}}</p>
+                    </div>
+                  </div>
+                  <h6 class="heading">Additional Information</h6>
+                  <hr class="mt-0 mb-4">
+                  <div class="row pt-1">
+                    <div class="col-6 mb-3">
+                      <h6>Interests</h6>
+                      <p class="text-muted">{{profileData.interests}}</p>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <h6>Other Details</h6>
+                      <p class="text-muted">{{profileData.additional_details}}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  {% endblock %}

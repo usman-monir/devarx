@@ -127,8 +127,8 @@ Header Style
 */
 
 .header-area {
-  background: linear-gradient(90deg, rgba(94, 69, 252, 0.9) 0%, rgba(24, 111, 252, 0.8) 100%);
-  backdrop-filter: blur(15px);
+  background-color: rgb(88, 101, 242);
+  backdrop-filter: blur(10px);
   height: 110px;
   left: 0;
   right: 0;
@@ -150,6 +150,8 @@ Header Style
 
 .header-area .main-nav  h2{
   font-weight: bolder;
+  font-family: "poppins", 'sans-serif';
+  font-size: 2.5rem;
   color: white;
   margin: 0;
 }

@@ -30,12 +30,34 @@
       href="{{ url_for('static',  filename='css/bootstrap.min.css')}}"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/landingPage.css')}}">
     <title>{{title}}</title>
   </head>
   <body>
-    {% for message in get_flashed_messages(with_categories=True) %}
-    <p class="alert alert-{{message[0]}} m-0">{{ message[1] }}</p>
-    {% endfor %}
+  <header class="header-area header-sticky">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <nav class="main-nav">
+                       <h2>Devarx</h2>
+                    <ul class="nav">
+                      <li class="scroll-to-section"><a href="/about_us">About Us</a></li>
+                      <li class="scroll-to-section"><a href="#projects">Projects</a></li>
+                      <li class="scroll-to-section"><a href="#infos">Infos</a></li>
+                      <li class="scroll-to-section"><a href="#contact">Contact</a></li>
+                  </ul>
+                    <a class='menu-trigger'>
+                        <span>Menu</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+  </header>
+  {% for message in get_flashed_messages(with_categories=True) %}
+    <p class="alert alert-{{message[0]}} m-0 flash_message">{{ message[1] }}</p>
+  {% endfor %}
+
     <div class="fabs">
       <div class="chat">
         <div class="chat_header">
@@ -122,11 +144,6 @@
                         </div>
                         <!-- End Social link -->
                     </div>
-                    <!-- End Footer info -->
-                    <div class="footer-awarad">
-                        <img src="images/icon/best.png" alt="">
-                        <p class="footer_paragraph">Best Design Company 2019</p>
-                    </div>
                 </div>
                 <!-- End Col -->
                 <div class="col-md-12 col-lg-8">
@@ -195,7 +212,7 @@
                                         <a href="#">Testimonials</a>
                                     </li>
                                     <li>
-                                        <a href="#">Faq</a>
+                                        <a href="/faq">Faq</a>
                                     </li>
                                 </ul>
                             </div>
@@ -300,5 +317,14 @@
         event.preventDefault();
       });
     });
+    flash = document.getElementsByClassName('flash_message')
+    setTimeout(()=>{
+        for(let i =0; i < flash.length; i++){
+            flash[i].remove();
+        }
+        if (flash.length == 1) {
+            flash[0].remove()
+        }
+    },5000)
   </script>
 </html>

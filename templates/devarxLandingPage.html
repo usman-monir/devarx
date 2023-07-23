@@ -1,34 +1,6 @@
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{url_for('static', filename='css/landingPage.css')}}">
 {% extends "base.html"%}
 {% block content %}
 <body>
-  <!-- ***** Header Area Start ***** -->
-  <header class="header-area header-sticky">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <nav class="main-nav">
-                       <h2>Devarx</h2>
-                    <!-- ***** Menu Start ***** -->
-                    <ul class="nav">
-                      <li class="scroll-to-section"><a href="#top" class="active">Home</a></li>
-                      <li class="scroll-to-section"><a href="#services">Services</a></li>
-                      <li class="scroll-to-section"><a href="#projects">Projects</a></li>
-                      <li class="scroll-to-section"><a href="#infos">Infos</a></li>
-                      <li class="scroll-to-section"><a href="#contact">Contact</a></li>
-                  </ul>
-                    <a class='menu-trigger'>
-                        <span>Menu</span>
-                    </a>
-                    <!-- ***** Menu End ***** -->
-                </nav>
-            </div>
-        </div>
-    </div>
-  </header>
-  <!-- ***** Header Area End ***** -->
-
   <div class="main-banner" id="top">
           <div class="caption header-text">
             <h6>SEO DIGITAL AGENCY</h6>
@@ -97,14 +69,6 @@
     </div>
   </div>
   {% endblock %}
-
-
-<script src="{{ url_for('static', filename='js/isotope.min.js')}}"></script>
-<script src="{{ url_for('static', filename='js/owl-carousel.js')}}"></script>
-<script src="{{ url_for('static', filename='js/tabs.js')}}"></script>
-<script src="{{ url_for('static', filename='js/popup.js')}}"></script>
-<script src="{{ url_for('static', filename='js/custom.js')}}"></script>
-
 </body>
 
 </html>

@@ -196,6 +196,31 @@ class Users:
             if mydbCursor is not None:
                 mydbCursor.close()
 
+    def deleteProfile(self,id):
+        try:
+            mydbCursor = db.cursor()
+            query1 = "DELETE from connections where friend1= %s or friend2 = %s"
+            query2 = "DELETE from pending where reciever_id=%s or sender_id = %s"
+            query3 = "DELETE from chat_history where sender_id = %s or reciever_id = %s"
+            query4 = "DELETE from profiles where id = %s"
+            query5 = "DELETE from users where id = %s"
+            mydbCursor.execute(query1, (id, id))
+            db.commit()
+            mydbCursor.execute(query2, (id, id))
+            db.commit()
+            mydbCursor.execute(query3, (id, id))
+            db.commit()
+            mydbCursor.execute(query4, id)
+            db.commit()
+            mydbCursor.execute(query5, id)
+            db.commit()
+            return (True,"Your account have been deactivated! Create another to join Devarx!","danger")
+        except Exception as e:
+            print(str(e))
+            return (False, "Profile cannot be deleted due to: " + str(e), "warning")
+        finally:
+            if mydbCursor is not None:
+                mydbCursor.close()
 
     def getAllProfiles(self):
         try:
@@ -325,7 +350,7 @@ class Users:
             mydbCursor.execute(sql, args)
             db.commit()
             mydbCursor.close()
-            return ("Connection Removed!", "success")
+            return (True,"Connection Removed!", "success")
 
         except Exception as e:
             print(str(e))
@@ -335,13 +360,12 @@ class Users:
             end_index = mssg.find('"', start_index)
 
             if start_index != -1 and end_index != -1:
-                return (mssg[start_index:end_index], "danger")
+                return (False, mssg[start_index:end_index], "danger")
 
 
     def getConnections(self,id):
         try:
             mydbCursor = db.cursor()
-
             sql = "select * from connections where friend1=%s or friend2=%s"
             args=(id,id)
             mydbCursor.execute(sql,args)

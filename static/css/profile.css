@@ -1,0 +1,14 @@
+.gradient-custom {
+    background: linear-gradient(to right bottom, rgb(252, 252, 252), rgb(247, 247, 247));
+}
+.card
+{
+    box-shadow: 10px -10px 10px #f0efef;
+    border: none;
+}
+.heading
+{
+    font-weight: 600;
+    font-size: 18px;
+    color: rgb(98, 98, 98);
+}
